@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { useEffect } from "react";
 import { useAdmin } from "../context/AdminContext";
 import { formatCurrency, STOCK_LABEL, PAYMENT_LABEL, ORDER_STATUS_LABEL, enrichOrder } from "../data/mockData";
+import ProductImage from "./products/ProductImage";
 
 export default function DetailModal() {
   const { modal, closeModal, customers, products } = useAdmin();
@@ -32,7 +33,12 @@ export default function DetailModal() {
 
         {type === "product" && data && (
           <section className="p-5">
-            <img src={data.image} alt={data.name} className="w-full h-56 object-cover rounded-xl mb-4" />
+            <ProductImage
+              src={data.image}
+              productId={data.id}
+              alt={data.name}
+              className="w-full h-56 object-cover rounded-xl mb-4 bg-slate-100 dark:bg-slate-800"
+            />
             <p className="text-xs text-emerald-600 font-semibold uppercase">{data.category}</p>
             <h4 className="text-xl font-bold mt-1 text-slate-900 dark:text-white">{data.name}</h4>
             <p className="text-2xl font-bold text-emerald-600 mt-2">{formatCurrency(data.price)}</p>
@@ -86,7 +92,12 @@ export default function DetailModal() {
                 </section>
               </section>
               <article className="flex gap-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-800/80">
-                <img src={o.product?.image} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                <ProductImage
+                  src={o.product?.image}
+                  productId={o.product?.id}
+                  alt={o.product?.name}
+                  className="w-16 h-16 rounded-lg object-cover shrink-0 bg-slate-200 dark:bg-slate-700"
+                />
                 <section>
                   <p className="font-medium text-sm">{o.product?.name}</p>
                   <p className="text-xs text-slate-500">SL: {o.quantity}</p>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import FormField, { inputCls, selectCls } from "./FormField";
 import { formatCurrency } from "../../data/mockData";
+import ProductImage from "../products/ProductImage";
 
 const EMPTY = {
   customerId: "",
@@ -101,7 +102,12 @@ export default function OrderForm({ initial, customers, products, onSubmit, subm
 
       {selectedProduct && (
         <article className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-800/40 p-3 flex items-center gap-3">
-          <img src={selectedProduct.image} alt="" className="w-12 h-12 rounded-lg object-cover" />
+          <ProductImage
+            src={selectedProduct.image}
+            productId={selectedProduct.id}
+            alt={selectedProduct.name}
+            className="w-12 h-12 rounded-lg object-cover shrink-0 bg-slate-100 dark:bg-slate-800"
+          />
           <section>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{selectedProduct.name}</p>
             <p className="text-lg font-bold text-emerald-600">{formatCurrency(previewTotal)}</p>

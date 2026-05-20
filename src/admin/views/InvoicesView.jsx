@@ -6,6 +6,7 @@ import { useTableControls } from "../hooks/useTableControls";
 import CrudPageHeader from "../components/CrudPageHeader";
 import DataTable from "../components/table/DataTable";
 import ActionButtons from "../components/ActionButtons";
+import ProductImage from "../components/products/ProductImage";
 
 export default function InvoicesView() {
   const { enrichOrders, openModal, openCrud, openDelete } = useAdmin();
@@ -48,7 +49,12 @@ export default function InvoicesView() {
       title: "Sản phẩm",
       render: (o) => (
         <section className="flex items-center gap-2">
-          <img src={o.product?.image} alt="" className="w-9 h-9 rounded-lg object-cover hidden sm:block" />
+          <ProductImage
+            src={o.product?.image}
+            productId={o.product?.id}
+            alt={o.product?.name}
+            className="w-9 h-9 rounded-lg object-cover hidden sm:block shrink-0 bg-slate-100 dark:bg-slate-800"
+          />
           <span className="truncate max-w-[180px]">{o.product?.name}</span>
         </section>
       ),

@@ -5,6 +5,7 @@ import { useTableControls } from "../hooks/useTableControls";
 import CrudPageHeader from "../components/CrudPageHeader";
 import DataTable from "../components/table/DataTable";
 import ActionButtons from "../components/ActionButtons";
+import ProductImage from "../components/products/ProductImage";
 
 export default function ProductsView() {
   const { products, openModal, openCrud, openDelete } = useAdmin();
@@ -28,7 +29,12 @@ export default function ProductsView() {
       key: "image",
       title: "Ảnh",
       render: (p) => (
-        <img src={p.image} alt="" className="w-11 h-11 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-700" />
+        <ProductImage
+          src={p.image}
+          productId={p.id}
+          alt={p.name}
+          className="w-11 h-11 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-700 bg-slate-100 dark:bg-slate-800"
+        />
       ),
     },
     {

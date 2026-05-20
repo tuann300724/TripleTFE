@@ -1,18 +1,25 @@
 /** Mock data — cửa hàng cầu lông TripleT (liên kết KH ↔ đơn ↔ SP) */
+import { defaultProductImageUrl } from "../utils/productImage";
+
+const product = (id, fields) => ({
+  ...fields,
+  id,
+  image: defaultProductImageUrl(id),
+});
 
 export const PRODUCTS = [
-  { id: "P01", name: "Vợt Yonex Astrox 99 Pro", category: "Vợt", price: 4590000, stock: 24, status: "in_stock", image: "https://images.unsplash.com/photo-1626224583764-f87db7ef7350?w=400&h=400&fit=crop", description: "Vợt tấn công cực mạnh, cân bằng HEAD HEAVY, phù hợp đánh công." },
-  { id: "P02", name: "Vợt Victor Thruster K 9900", category: "Vợt", price: 3890000, stock: 18, status: "in_stock", image: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=400&h=400&fit=crop", description: "Lực smash mạnh, độ ổn định cao cho vận động viên chuyên nghiệp." },
-  { id: "P03", name: "Giày Yonex Power Cushion 65 Z3", category: "Giày", price: 3490000, stock: 35, status: "in_stock", image: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=400&fit=crop", description: "Đệm Power Cushion, bám sân tốt, nhẹ và linh hoạt." },
-  { id: "P04", name: "Giày Victor A970ACE", category: "Giày", price: 2890000, stock: 42, status: "in_stock", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop", description: "Giày đua tốc độ, hỗ trợ cổ chân khi di chuyển đa hướng." },
-  { id: "P05", name: "Áo cầu lông Yonex 10426EX", category: "Áo", price: 890000, stock: 80, status: "in_stock", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop", description: "Vải thoáng khí Very Cool Dry, co giãn 4 chiều." },
-  { id: "P06", name: "Áo Lining AYMU469", category: "Áo", price: 750000, stock: 65, status: "in_stock", image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400&h=400&fit=crop", description: "Áo thi đấu nhẹ, thấm hút mồ hôi nhanh." },
-  { id: "P07", name: "Quấn cán Yonex Super Grap", category: "Quấn cán", price: 120000, stock: 200, status: "in_stock", image: "https://images.unsplash.com/photo-1612036789812-39ea61bbf1c2?w=400&h=400&fit=crop", description: "Quấn cán mỏng, thấm mồ hôi, cảm giác cầm chắc tay." },
-  { id: "P08", name: "Quấn cán Victor GR233", category: "Quấn cán", price: 95000, stock: 150, status: "in_stock", image: "https://images.unsplash.com/photo-1598289431512-97c090cc8e80?w=400&h=400&fit=crop", description: "Độ bám cao, bền, phù hợp tập luyện hàng ngày." },
-  { id: "P09", name: "Túi cầu lông Yonex Pro 9", category: "Túi", price: 1250000, stock: 28, status: "in_stock", image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop", description: "Túi 9 vợt, ngăn giày riêng, chống nước nhẹ." },
-  { id: "P10", name: "Túi Victor BR3620", category: "Túi", price: 980000, stock: 0, status: "out_of_stock", image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=400&fit=crop", description: "Túi 6 vợt gọn nhẹ, đai đeo vai tiện lợi." },
-  { id: "P11", name: "Quả cầu Yonex AS-50 (12 quả)", category: "Phụ kiện", price: 890000, stock: 120, status: "in_stock", image: "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=400&h=400&fit=crop", description: "Cầu thi đấu chính thức, độ bền và đường bay ổn định." },
-  { id: "P12", name: "Vợt Lining N7II Light", category: "Vợt", price: 3290000, stock: 8, status: "low_stock", image: "https://images.unsplash.com/photo-1622163642999-6c4e27d313c7?w=400&h=400&fit=crop", description: "Vợt nhẹ, dễ điều khiển, phù hợp người mới chơi nâng cao." },
+  product("P01", { name: "Vợt Yonex Astrox 99 Pro", category: "Vợt", price: 4590000, stock: 24, status: "in_stock", description: "Vợt tấn công cực mạnh, cân bằng HEAD HEAVY, phù hợp đánh công." }),
+  product("P02", { name: "Vợt Victor Thruster K 9900", category: "Vợt", price: 3890000, stock: 18, status: "in_stock", description: "Lực smash mạnh, độ ổn định cao cho vận động viên chuyên nghiệp." }),
+  product("P03", { name: "Giày Yonex Power Cushion 65 Z3", category: "Giày", price: 3490000, stock: 35, status: "in_stock", description: "Đệm Power Cushion, bám sân tốt, nhẹ và linh hoạt." }),
+  product("P04", { name: "Giày Victor A970ACE", category: "Giày", price: 2890000, stock: 42, status: "in_stock", description: "Giày đua tốc độ, hỗ trợ cổ chân khi di chuyển đa hướng." }),
+  product("P05", { name: "Áo cầu lông Yonex 10426EX", category: "Áo", price: 890000, stock: 80, status: "in_stock", description: "Vải thoáng khí Very Cool Dry, co giãn 4 chiều." }),
+  product("P06", { name: "Áo Lining AYMU469", category: "Áo", price: 750000, stock: 65, status: "in_stock", description: "Áo thi đấu nhẹ, thấm hút mồ hôi nhanh." }),
+  product("P07", { name: "Quấn cán Yonex Super Grap", category: "Quấn cán", price: 120000, stock: 200, status: "in_stock", description: "Quấn cán mỏng, thấm mồ hôi, cảm giác cầm chắc tay." }),
+  product("P08", { name: "Quấn cán Victor GR233", category: "Quấn cán", price: 95000, stock: 150, status: "in_stock", description: "Độ bám cao, bền, phù hợp tập luyện hàng ngày." }),
+  product("P09", { name: "Túi cầu lông Yonex Pro 9", category: "Túi", price: 1250000, stock: 28, status: "in_stock", description: "Túi 9 vợt, ngăn giày riêng, chống nước nhẹ." }),
+  product("P10", { name: "Túi Victor BR3620", category: "Túi", price: 980000, stock: 0, status: "out_of_stock", description: "Túi 6 vợt gọn nhẹ, đai đeo vai tiện lợi." }),
+  product("P11", { name: "Quả cầu Yonex AS-50 (12 quả)", category: "Phụ kiện", price: 890000, stock: 120, status: "in_stock", description: "Cầu thi đấu chính thức, độ bền và đường bay ổn định." }),
+  product("P12", { name: "Vợt Lining N7II Light", category: "Vợt", price: 3290000, stock: 8, status: "low_stock", description: "Vợt nhẹ, dễ điều khiển, phù hợp người mới chơi nâng cao." }),
 ];
 
 export const CUSTOMERS = [
