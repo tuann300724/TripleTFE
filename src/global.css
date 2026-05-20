@@ -1,1 +1,180 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+    body {
+        @apply antialiased bg-slate-50 text-slate-800 dark:bg-[#0c1219] dark:text-slate-200;
+    }
+
+    img {
+        @apply transition-transform duration-500 ease-out;
+    }
+}
+
+@layer components {
+    /* ── Typography (dark mode dịu mắt) ── */
+    .tt-label {
+        @apply text-sm font-semibold uppercase tracking-widest text-emerald-600 dark:text-emerald-400;
+    }
+
+    .tt-title {
+        @apply text-3xl font-bold text-slate-900 dark:text-slate-50;
+    }
+
+    .tt-title-lg {
+        @apply text-4xl font-bold text-slate-900 dark:text-slate-50 md:text-5xl;
+    }
+
+    .tt-heading {
+        @apply text-2xl font-bold text-slate-900 dark:text-slate-50;
+    }
+
+    .tt-body {
+        @apply leading-relaxed text-slate-600 dark:text-slate-300;
+    }
+
+    .tt-muted {
+        @apply text-slate-500 dark:text-slate-400;
+    }
+
+    /* ── Hero banner ── */
+    .tt-hero {
+        @apply bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 px-6 py-16 text-white md:px-12 md:py-20;
+    }
+
+    /* ── Nền section xen kẽ ── */
+    .tt-section-alt {
+        @apply bg-slate-100/80 dark:bg-slate-900/40;
+    }
+
+    /* ── Card & surface ── */
+    .tt-card {
+        @apply rounded-2xl bg-white shadow-md ring-1 ring-slate-200/80
+               dark:bg-slate-800/80 dark:ring-slate-600/50;
+    }
+
+    .tt-card-interactive {
+        @apply cursor-default rounded-2xl bg-white shadow-md ring-1 ring-slate-200/80
+               transition-all duration-300 ease-out
+               hover:-translate-y-1.5 hover:shadow-xl hover:shadow-emerald-500/10
+               hover:ring-emerald-500/25
+               dark:bg-slate-800/80 dark:ring-slate-600/50
+               dark:hover:bg-slate-800 dark:hover:shadow-emerald-500/5
+               dark:hover:ring-emerald-500/35;
+    }
+
+    .tt-surface {
+        @apply rounded-3xl bg-slate-50 p-10 ring-1 ring-slate-200/50
+               dark:bg-slate-800/50 dark:ring-slate-600/40 md:p-14;
+    }
+
+    /* ── TripleT hover: nâng nhẹ + glow xanh ── */
+    .tt-hover {
+        @apply transition-all duration-300 ease-out;
+    }
+
+    .tt-hover-lift {
+        @apply transition-all duration-300 ease-out
+               hover:-translate-y-0.5 hover:shadow-md hover:shadow-emerald-500/15;
+    }
+
+    .tt-hover-scale {
+        @apply transition-all duration-300 ease-out hover:scale-[1.02] active:scale-[0.98];
+    }
+
+    .tt-hover-glow {
+        @apply transition-all duration-300 ease-out hover:text-emerald-600 dark:hover:text-emerald-400;
+    }
+
+    /* Ảnh zoom khi hover card cha */
+    .tt-img-zoom {
+        @apply transition-transform duration-500 ease-out group-hover:scale-105;
+    }
+
+    /* ── Buttons ── */
+    .tt-btn-primary {
+        @apply inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3
+               font-semibold text-white shadow-md shadow-emerald-600/20
+               transition-all duration-300 ease-out
+               hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/35
+               active:translate-y-0 active:shadow-md
+               dark:shadow-emerald-900/30;
+    }
+
+    .tt-btn-ghost {
+        @apply inline-flex items-center justify-center rounded-xl border border-white/25 px-6 py-3
+               font-semibold text-white backdrop-blur-sm transition-all duration-300 ease-out
+               hover:-translate-y-0.5 hover:border-emerald-400/60 hover:bg-white/10 hover:shadow-lg
+               hover:shadow-emerald-500/10 active:translate-y-0;
+    }
+
+    .tt-btn-dark {
+        @apply inline-flex items-center justify-center rounded-xl bg-slate-900 px-6 py-3
+               font-semibold text-white transition-all duration-300 ease-out
+               hover:-translate-y-0.5 hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/25
+               active:translate-y-0
+               dark:bg-emerald-600 dark:hover:bg-emerald-500;
+    }
+
+    /* ── Links ── */
+    .tt-link {
+        @apply font-medium text-emerald-600 transition-all duration-300
+               hover:translate-x-0.5 hover:text-emerald-700
+               dark:text-emerald-400 dark:hover:text-emerald-300;
+    }
+
+    /* ── Chip / filter ── */
+    .tt-chip {
+        @apply rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ease-out;
+    }
+
+    .tt-chip-active {
+        @apply bg-emerald-600 text-white shadow-md shadow-emerald-600/25
+               hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-lg;
+    }
+
+    .tt-chip-inactive {
+        @apply bg-slate-100 text-slate-600
+               hover:-translate-y-0.5 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-sm
+               dark:bg-slate-800 dark:text-slate-300
+               dark:hover:bg-slate-700 dark:hover:text-emerald-400;
+    }
+
+    /* ── Input ── */
+    .tt-input {
+        @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 shadow-sm outline-none
+               transition-all duration-300
+               hover:border-emerald-300
+               focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
+               dark:border-slate-600 dark:bg-slate-800/90 dark:text-slate-100
+               dark:placeholder:text-slate-500 dark:hover:border-slate-500
+               dark:focus:border-emerald-500;
+    }
+
+    /* ── Logo ── */
+    .tt-logo {
+        @apply transition-all duration-300 ease-out hover:scale-105 hover:opacity-90;
+    }
+
+    /* ── Nav item ── */
+    .tt-nav {
+        @apply text-sm font-medium transition-all duration-300 ease-out
+               hover:-translate-y-0.5 hover:text-emerald-600
+               dark:hover:text-emerald-400;
+    }
+
+    .tt-nav-active {
+        @apply text-emerald-600 dark:text-emerald-400;
+    }
+
+    .tt-nav-inactive {
+        @apply text-slate-600 dark:text-slate-300;
+    }
+
+    /* ── Stat box hover ── */
+    .tt-stat {
+        @apply text-center transition-all duration-300 ease-out
+               hover:-translate-y-1 hover:scale-105;
+    }
+}
