@@ -29,6 +29,7 @@ function loadPersistedData() {
   };
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const MENU = {
   overview: "Dashboard",
   products: "Products",
@@ -385,6 +386,7 @@ export function AdminProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAdmin() {
   const ctx = useContext(AdminContext);
   if (!ctx) throw new Error("useAdmin trong AdminProvider");
