@@ -1,0 +1,80 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+.admin-wrap { font-family: Inter, system-ui, sans-serif; }
+
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.dark .glass {
+  background: rgba(15, 23, 42, 0.75);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.anim-in { animation: fadeUp 0.35s ease-out; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.anim-spin { animation: spin 0.7s linear infinite; }
+
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px -8px rgba(16, 185, 129, 0.25);
+}
+
+.admin-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+.admin-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+.dark .admin-scroll::-webkit-scrollbar-thumb { background: #475569; }
+
+.table-row { transition: background 0.15s; }
+.table-row:hover { background: rgb(241 245 249 / 0.8); }
+.dark .table-row:hover { background: rgb(51 65 85 / 0.4); }
+
+.chart-h { height: 260px; position: relative; }
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-in { animation: modalIn 0.28s ease-out; }
+
+/* Login page */
+.login-page { font-family: Inter, system-ui, sans-serif; }
+.login-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16, 185, 129, 0.18), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(59, 130, 246, 0.1), transparent);
+}
+.login-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+}
+.login-orb-1 {
+  width: 320px; height: 320px;
+  background: #10b981;
+  top: -80px; right: -60px;
+  animation: orbFloat 8s ease-in-out infinite;
+}
+.login-orb-2 {
+  width: 280px; height: 280px;
+  background: #3b82f6;
+  bottom: -60px; left: -40px;
+  animation: orbFloat 10s ease-in-out infinite reverse;
+}
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(20px, -15px); }
+}
+.login-card {
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
