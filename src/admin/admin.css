@@ -1,6 +1,24 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-.admin-wrap { font-family: Inter, system-ui, sans-serif; }
+:root {
+  --admin-primary: 16 185 129;
+  --admin-font-family: Inter, system-ui, sans-serif;
+}
+
+.admin-wrap { font-family: var(--admin-font-family); }
+
+.admin-nav-active {
+  background: linear-gradient(to right, rgb(var(--admin-primary)), rgb(var(--admin-primary) / 0.85));
+  box-shadow: 0 4px 14px -4px rgb(var(--admin-primary) / 0.45);
+}
+
+.admin-brand-gradient {
+  background: linear-gradient(to bottom right, rgb(var(--admin-primary)), rgb(var(--admin-primary) / 0.7)) !important;
+}
+
+.settings-page .settings-card-hover:hover {
+  box-shadow: 0 8px 24px -8px rgb(var(--admin-primary) / 0.2);
+}
 
 .glass {
   background: rgba(255, 255, 255, 0.72);
@@ -43,6 +61,13 @@
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 .modal-in { animation: modalIn 0.28s ease-out; }
+
+@keyframes rowOut {
+  to { opacity: 0; transform: translateX(8px); }
+}
+.row-delete { animation: rowOut 0.25s ease-out forwards; }
+
+.admin-toast { animation: fadeUp 0.3s ease-out; }
 
 /* Login page */
 .login-page { font-family: Inter, system-ui, sans-serif; }

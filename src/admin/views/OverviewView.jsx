@@ -1,12 +1,17 @@
 import { DollarSign, ShoppingCart, Users, Package } from "lucide-react";
 import StatCard from "../components/StatCard";
 import RevenueChart from "../components/RevenueChart";
-import { STATS, ORDERS, formatCurrency, formatNumber, enrichOrder, PAYMENT_LABEL } from "../data/mockData";
+import { STATS, formatCurrency, formatNumber, PAYMENT_LABEL } from "../data/mockData";
 import { useAdmin } from "../context/AdminContext";
 
 export default function OverviewView() {
-  const { openModal } = useAdmin();
-  const recent = ORDERS.slice(0, 5).map(enrichOrder);
+  const { openModal, orders, products, customers, enrichOrders } = useAdmin();
+  const recent = enrichOrders(orders).slice(0, 5);
+  const liveStats = {
+    orders: STATS.orders - 12 + orders.length,
+    customers: STATS.customers - 11 + customers.length,
+    products: STATS.products - 12 + products.length,
+  };
 
   return (
     <section className="anim-in space-y-6">
@@ -16,9 +21,9 @@ export default function OverviewView() {
       </header>
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard title="Doanh thu" value={formatCurrency(STATS.revenue)} growth={STATS.revenueGrowth} icon={DollarSign} color="emerald" />
-        <StatCard title="Đơn hàng" value={formatNumber(STATS.orders)} growth={STATS.ordersGrowth} icon={ShoppingCart} color="blue" />
-        <StatCard title="Khách hàng" value={formatNumber(STATS.customers)} growth={STATS.customersGrowth} icon={Users} color="violet" />
-        <StatCard title="Sản phẩm" value={formatNumber(STATS.products)} growth={STATS.productsGrowth} icon={Package} color="orange" />
+        <StatCard title="Đơn hàng" value={formatNumber(liveStats.orders)} growth={STATS.ordersGrowth} icon={ShoppingCart} color="blue" />
+        <StatCard title="Khách hàng" value={formatNumber(liveStats.customers)} growth={STATS.customersGrowth} icon={Users} color="violet" />
+        <StatCard title="Sản phẩm" value={formatNumber(liveStats.products)} growth={STATS.productsGrowth} icon={Package} color="orange" />
       </section>
       <article className="glass rounded-2xl border border-slate-200/60 dark:border-slate-700/60 p-5 shadow-sm">
         <h3 className="font-semibold mb-3 text-slate-900 dark:text-white">Biểu đồ doanh thu theo tháng</h3>

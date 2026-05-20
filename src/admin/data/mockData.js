@@ -68,17 +68,32 @@ export const STATS = {
   productsGrowth: 3.1,
 };
 
-export function getProduct(id) {
-  return PRODUCTS.find((p) => p.id === id);
+export function computeStockStatus(stock) {
+  if (stock <= 0) return "out_of_stock";
+  if (stock <= 10) return "low_stock";
+  return "in_stock";
 }
 
-export function getCustomer(id) {
-  return CUSTOMERS.find((c) => c.id === id);
+export const ORDER_STATUS_LABEL = {
+  delivered: { label: "Đã giao", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" },
+  shipping: { label: "Đang giao", cls: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" },
+  processing: { label: "Xử lý", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" },
+  cancelled: { label: "Đã hủy", cls: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400" },
+};
+
+export const PRODUCT_CATEGORIES = ["Vợt", "Giày", "Áo", "Quấn cán", "Túi", "Phụ kiện"];
+
+export function getProduct(id, products = PRODUCTS) {
+  return products.find((p) => p.id === id);
 }
 
-export function enrichOrder(order) {
-  const customer = getCustomer(order.customerId);
-  const product = getProduct(order.productId);
+export function getCustomer(id, customers = CUSTOMERS) {
+  return customers.find((c) => c.id === id);
+}
+
+export function enrichOrder(order, customers = CUSTOMERS, products = PRODUCTS) {
+  const customer = getCustomer(order.customerId, customers);
+  const product = getProduct(order.productId, products);
   return { ...order, customer, product };
 }
 

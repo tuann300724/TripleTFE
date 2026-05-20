@@ -1,32 +1,102 @@
-import { CUSTOMERS, formatCurrency } from "../data/mockData";
+import { UserPlus } from "lucide-react";
 import { useAdmin } from "../context/AdminContext";
+import { formatCurrency } from "../data/mockData";
+import { useTableControls } from "../hooks/useTableControls";
+import CrudPageHeader from "../components/CrudPageHeader";
+import DataTable from "../components/table/DataTable";
+import ActionButtons from "../components/ActionButtons";
 
 export default function CustomersView() {
-  const { openModal } = useAdmin();
+  const { customers, openModal, openCrud, openDelete } = useAdmin();
+
+  const table = useTableControls(customers, {
+    searchKeys: ["name", "email", "phone", "id"],
+    defaultSort: { key: "name", dir: "asc" },
+    pageSize: 8,
+  });
+
+  const columns = [
+    {
+      key: "avatar",
+      title: "",
+      render: (c) => (
+        <img src={c.avatar} alt="" className="w-10 h-10 rounded-full ring-2 ring-emerald-500/20 object-cover" />
+      ),
+    },
+    {
+      key: "name",
+      title: "Khách hàng",
+      sortable: true,
+      render: (c) => (
+        <section>
+          <p className="font-medium text-slate-900 dark:text-white">{c.name}</p>
+          <p className="text-xs text-slate-500">{c.id}</p>
+        </section>
+      ),
+    },
+    {
+      key: "email",
+      title: "Email",
+      sortable: true,
+      render: (c) => <span className="text-slate-600 dark:text-slate-300 truncate max-w-[180px] inline-block">{c.email}</span>,
+    },
+    {
+      key: "phone",
+      title: "Điện thoại",
+      render: (c) => c.phone,
+    },
+    {
+      key: "totalSpent",
+      title: "Đã mua",
+      sortable: true,
+      align: "right",
+      render: (c) => <span className="font-semibold text-emerald-600">{formatCurrency(c.totalSpent)}</span>,
+    },
+    {
+      key: "joined",
+      title: "Tham gia",
+      sortable: true,
+      render: (c) => <span className="text-slate-500 text-xs">{c.joined}</span>,
+    },
+    {
+      key: "actions",
+      title: "",
+      align: "right",
+      render: (c) => (
+        <ActionButtons
+          onEdit={() => openCrud("customer", "edit", c)}
+          onDelete={() => openDelete("customer", c)}
+        />
+      ),
+    },
+  ];
 
   return (
     <section className="anim-in space-y-6">
-      <header>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Quản lý khách hàng</h2>
-        <p className="text-sm text-slate-500 mt-1">{CUSTOMERS.length} khách hàng</p>
-      </header>
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {CUSTOMERS.map((c) => (
-          <article
-            key={c.id}
-            onClick={() => openModal("customer", c)}
-            className="glass rounded-2xl border border-slate-200/60 dark:border-slate-700/60 p-5 card-hover cursor-pointer flex items-center gap-4 shadow-sm"
-          >
-            <img src={c.avatar} alt="" className="w-14 h-14 rounded-full ring-2 ring-emerald-500/30 object-cover" />
-            <section className="min-w-0 flex-1">
-              <h3 className="font-semibold truncate text-slate-900 dark:text-white">{c.name}</h3>
-              <p className="text-xs text-slate-500 truncate">{c.email}</p>
-              <p className="text-xs text-slate-500">{c.phone}</p>
-              <p className="text-sm font-bold text-emerald-600 mt-2">{formatCurrency(c.totalSpent)}</p>
-            </section>
-          </article>
-        ))}
-      </section>
+      <CrudPageHeader
+        title="Quản lý khách hàng"
+        subtitle={`${customers.length} khách hàng`}
+        addLabel="Thêm khách hàng"
+        icon={UserPlus}
+        onAdd={() => openCrud("customer", "create")}
+      />
+      <DataTable
+        columns={columns}
+        rows={table.rows}
+        query={table.query}
+        onQueryChange={table.setQuery}
+        sort={table.sort}
+        onSort={table.toggleSort}
+        page={table.page}
+        totalPages={table.totalPages}
+        total={table.total}
+        pageSize={table.pageSize}
+        onPageChange={table.setPage}
+        onPageSizeChange={table.setPageSize}
+        onRowClick={(c) => openModal("customer", c)}
+        emptyTitle="Không tìm thấy khách hàng"
+        emptyDescription="Thử từ khóa khác hoặc thêm khách hàng mới."
+      />
     </section>
   );
 }

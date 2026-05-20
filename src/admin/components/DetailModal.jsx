@@ -1,10 +1,10 @@
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import { useAdmin } from "../context/AdminContext";
-import { formatCurrency, STOCK_LABEL, PAYMENT_LABEL, enrichOrder } from "../data/mockData";
+import { formatCurrency, STOCK_LABEL, PAYMENT_LABEL, ORDER_STATUS_LABEL, enrichOrder } from "../data/mockData";
 
 export default function DetailModal() {
-  const { modal, closeModal } = useAdmin();
+  const { modal, closeModal, customers, products } = useAdmin();
 
   useEffect(() => {
     document.body.style.overflow = modal ? "hidden" : "";
@@ -72,7 +72,7 @@ export default function DetailModal() {
         )}
 
         {type === "order" && data && (() => {
-          const o = enrichOrder(data);
+          const o = enrichOrder(data, customers, products);
           return (
             <section className="p-5">
               <p className="text-sm font-mono text-emerald-600 font-bold">{o.id}</p>
@@ -97,8 +97,8 @@ export default function DetailModal() {
                 <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${PAYMENT_LABEL[o.paymentStatus]?.cls}`}>
                   {PAYMENT_LABEL[o.paymentStatus]?.label}
                 </span>
-                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
-                  {o.orderStatus}
+                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${ORDER_STATUS_LABEL[o.orderStatus]?.cls || "bg-slate-200 dark:bg-slate-700"}`}>
+                  {ORDER_STATUS_LABEL[o.orderStatus]?.label || o.orderStatus}
                 </span>
               </section>
             </section>
