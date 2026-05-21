@@ -14,6 +14,7 @@ import Register from "./pages/Register";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
+import Profile from "./pages/Profile";
 import Dashboard from "./admin/Dashboard";
 import User from "./admin/User";
 
@@ -32,6 +33,7 @@ function App() {
                         <Route path="checkout" element={<Checkout />} />
                         <Route path="success" element={<Success />} />
                         <Route path="news" element={<News />} />
+                        <Route path="profile" element={<Profile />} />
                     </Route>
 
                     <Route path="/login" element={<Login />} />
