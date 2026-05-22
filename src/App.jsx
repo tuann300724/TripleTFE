@@ -40,6 +40,8 @@ import User from "./admin/User";
 
 import AdminProduct from "./admin/Product";
 
+import ProductCreate from "./admin/ProductCreate";
+
 import AdminOrder from "./admin/Order";
 
 import AdminCategory from "./admin/Category";
@@ -99,6 +101,8 @@ function App() {
                         <Route path="users" element={<User />} />
 
                         <Route path="products" element={<AdminProduct />} />
+
+                        <Route path="products/new" element={<ProductCreate />} />
 
                         <Route path="orders" element={<AdminOrder />} />
 

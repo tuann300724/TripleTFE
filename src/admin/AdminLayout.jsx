@@ -6,6 +6,7 @@ const titles = {
     "/admin": "Dashboard",
     "/admin/users": "Quản lý người dùng",
     "/admin/products": "Quản lý sản phẩm",
+    "/admin/products/new": "Thêm sản phẩm",
     "/admin/orders": "Quản lý đơn hàng",
     "/admin/categories": "Quản lý danh mục",
     "/admin/payments": "Quản lý thanh toán",
