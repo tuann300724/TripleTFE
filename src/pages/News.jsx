@@ -1,9 +1,9 @@
 import { newsArticles } from "../data/news";
 import NewsCard from "../components/NewsCard";
-
-const categories = ["Tất cả", "Giải đấu", "Sản phẩm", "Kỹ thuật", "Tư vấn", "Tin tức", "Khuyến mãi"];
+import { useNavigate } from "react-router-dom";
 
 export default function News() {
+    const navigate = useNavigate();
     const featured = newsArticles.find((a) => a.featured);
     const rest = newsArticles.filter((a) => !a.featured);
 
@@ -23,27 +23,20 @@ export default function News() {
             </section>
 
             <section className="mx-auto max-w-6xl px-6 py-12 md:px-12">
-                <div className="flex flex-wrap gap-2">
-                    {categories.map((cat, i) => (
-                        <button
-                            key={cat}
-                            type="button"
-                            className={`tt-chip ${i === 0 ? "tt-chip-active" : "tt-chip-inactive"}`}
-                        >
-                            {cat}
-                        </button>
-                    ))}
-                </div>
 
                 {featured && (
                     <div className="mt-10">
-                        <NewsCard article={featured} featured />
+                        <div onClick={() => navigate(`/news/${featured.id}`)} className="block cursor-pointer transition-transform hover:-translate-y-1">
+                            <NewsCard article={featured} featured />
+                        </div>
                     </div>
                 )}
 
                 <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                     {rest.map((article) => (
-                        <NewsCard key={article.id} article={article} />
+                        <div onClick={() => navigate(`/news/${article.id}`)} key={article.id} className="block cursor-pointer transition-transform hover:-translate-y-1">
+                            <NewsCard article={article} />
+                        </div>
                     ))}
                 </div>
             </section>

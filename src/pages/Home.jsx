@@ -13,10 +13,10 @@ const features = [
 ];
 
 export default function Home() {
-   
+
     const latestNews = newsArticles.slice(0, 3);
     const [products, setProducts] = useState([]);
- 
+
     useEffect(() => {
         axios.get("https://localhost:7147/api/Products")
             .then(res => {
@@ -26,7 +26,7 @@ export default function Home() {
             })
             .catch(err => console.log(err));
     }, []);
-    
+    console.log('pro', products);
     return (
         <div>
             <section className="tt-hero relative overflow-hidden">

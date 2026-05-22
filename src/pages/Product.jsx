@@ -39,9 +39,16 @@ function CustomProductCard({ product }) {
                     {product.productName}
                 </h3>
 
-                <div className="mt-3 flex min-h-8 items-baseline gap-2">
+                {/* PRICE */}
+                <div className="mt-3 flex min-h-8 flex-wrap items-baseline gap-2">
+                    {/* Giá lớn (Max Price) */}
                     <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
-                        {product.price.toLocaleString("vi-VN")} đ
+                        {product.maxPrice.toLocaleString("vi-VN")} đ
+                    </span>
+
+                    {/* Giá nhỏ hơn bên cạnh (Min Price) */}
+                    <span className="text-sm text-gray-500 line-through dark:text-gray-400">
+                        {product.minPrice.toLocaleString("vi-VN")} đ
                     </span>
                 </div>
 

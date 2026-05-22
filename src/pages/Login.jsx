@@ -8,19 +8,19 @@ export default function Login() {
         <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-900 px-4 py-12 sm:px-6 lg:px-8">
             {/* Background Blob Elements */}
             <div className="absolute top-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-emerald-600/30 blur-3xl" />
-            <div className="absolute bottom-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-lime-500/20 blur-3xl" />
+            <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-lime-500/20 blur-3xl" />
+
+            {/* Back to Home Button */}
+            <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-50">
+                <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-emerald-400 transition-colors duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                    </svg>
+                    Quay lại trang chủ
+                </Link>
+            </div>
 
             <div className="relative w-full max-w-md space-y-8">
-                {/* Back to Home Button */}
-                <div className="absolute top-[-60px] left-0">
-                    <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-emerald-400 transition-colors duration-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                        </svg>
-                        Quay lại trang chủ
-                    </Link>
-                </div>
-
                 <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 shadow-2xl space-y-6">
                     {/* Header */}
                     <div className="flex flex-col items-center">

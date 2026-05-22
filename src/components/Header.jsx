@@ -63,8 +63,8 @@ export default function Header() {
 
                 <div className="flex items-center gap-2 sm:gap-3">
                     <ThemeToggle />
-                    <Link to="/product" className="tt-btn-primary hidden px-5 py-2 text-sm sm:inline-flex">
-                        Mua ngay
+                    <Link to="/login" className="tt-btn-primary hidden px-5 py-2 text-sm sm:inline-flex">
+                        Đăng nhập
                     </Link>
                 </div>
             </div>

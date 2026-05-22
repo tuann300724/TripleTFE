@@ -20,6 +20,8 @@ import ProductDetail from "./pages/ProductDetail";
 
 import News from "./pages/News";
 
+import NewsDetail from "./pages/NewsDetail";
+
 import Login from "./pages/Login";
 
 import Register from "./pages/Register";
@@ -76,15 +78,17 @@ function App() {
 
                         <Route path="news" element={<News />} />
 
+                        <Route path="news/:id" element={<NewsDetail />} />
+
                         <Route path="profile" element={<Profile />} />
+
+                        <Route path="/login" element={<Login />} />
+
+                        <Route path="/register" element={<Register />} />
 
                     </Route>
 
 
-
-                    <Route path="/login" element={<Login />} />
-
-                    <Route path="/register" element={<Register />} />
 
 
 
