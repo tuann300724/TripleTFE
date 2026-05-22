@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { products } from "../data/products";
+
 import { newsArticles } from "../data/news";
 import ProductCard from "../components/ProductCard";
 import NewsCard from "../components/NewsCard";
-
+import axios from "axios";
+import { useEffect, useState } from "react";
 const features = [
     { icon: "🏸", title: "Chính hãng 100%", desc: "Vợt, giày, phụ kiện từ Yonex, Victor, Li-Ning" },
     { icon: "🚚", title: "Giao hàng nhanh", desc: "Miễn phí ship đơn từ 500.000đ toàn quốc" },
@@ -12,9 +13,20 @@ const features = [
 ];
 
 export default function Home() {
-    const featuredProducts = products.slice(0, 4);
+   
     const latestNews = newsArticles.slice(0, 3);
-
+    const [products, setProducts] = useState([]);
+ 
+    useEffect(() => {
+        axios.get("https://localhost:7147/api/Products")
+            .then(res => {
+                const filtered = res.data.filter(p => p.status === 1);
+                const featuredProducts = filtered.slice(0, 4);
+                setProducts(featuredProducts);
+            })
+            .catch(err => console.log(err));
+    }, []);
+    
     return (
         <div>
             <section className="tt-hero relative overflow-hidden">
@@ -90,8 +102,8 @@ export default function Home() {
                         </Link>
                     </div>
                     <div className="mt-10 grid auto-rows-fr items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                        {featuredProducts.map((p) => (
-                            <ProductCard key={p.id} product={p} />
+                        {products.map((p) => (
+                            <ProductCard key={p.productId} product={p} />
                         ))}
                     </div>
                 </div>

@@ -1,79 +1,94 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { products, formatPrice } from "../data/products";
+import axios from "axios";
 
 export default function ProductDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
 
-    // Find the product by ID or default to the first product if not found
-    const product = products.find((p) => p.id === parseInt(id)) || products[0];
+    const [product, setProduct] = useState(null);
+    const [variants, setVariants] = useState([]);
 
-    // State for gallery images, size, color, quantity, and active info tab
-    const [selectedImage, setSelectedImage] = useState(product.image);
+    const [selectedImage, setSelectedImage] = useState("");
     const [selectedSize, setSelectedSize] = useState("");
     const [selectedColor, setSelectedColor] = useState("");
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState("specs");
     const [showAlert, setShowAlert] = useState(false);
 
-    // Mock options based on category
-    const isRacket = product.category === "Vợt cầu lông";
-    const isShoes = product.category === "Giày thể thao";
-    const isClothing = product.category === "Trang phục";
+    // Product
+    useEffect(() => {
+        axios
+            .get(`https://localhost:7147/api/Products/${id}`)
+            .then((res) => {
+                setProduct(res.data);
+                setSelectedImage(res.data.thumbnail || "");
+            })
+            .catch((err) => console.log(err));
+    }, [id]);
 
-    const sizes = isRacket
-        ? ["3U/G5", "4U/G5", "5U/G5"]
-        : isShoes
-        ? ["39", "40", "41", "42", "43"]
-        : isClothing
-        ? ["S", "M", "L", "XL", "XXL"]
-        : ["Tiêu chuẩn"];
+    // Variants
+    useEffect(() => {
+        axios
+            .get("https://localhost:7147/api/ProductVariants")
+            .then((res) => {
+                const filteredVariants = res.data.filter(
+                    (item) => item.productId === Number(id)
+                );
 
-    const colors = [
-        { name: "Đen Emerald", value: "#059669" },
-        { name: "Xanh Sapphire", value: "#1d4ed8" },
-        { name: "Trắng Titan", value: "#f8fafc" },
-        { name: "Đỏ Crimson", value: "#dc2626" },
+                setVariants(filteredVariants);
+            })
+            .catch((err) => console.log(err));
+    }, [id]);
+
+    // Loading phải nằm dưới hooks
+    if (!product) return <div>Loading...</div>;
+
+    console.log("pro", product);
+    console.log("val", variants);
+
+    const sizes = [...new Set(variants.map((v) => v.size))];
+
+    const colors = [...new Set(variants.map((v) => v.color))];
+    const specs = [
+        {
+            label: "Thương hiệu",
+            value: product.brandName,
+        },
+        {
+            label: "Danh mục",
+            value: product.categoryName,
+        },
+        {
+            label: "Xuất xứ",
+            value: product.country,
+        },
+        {
+            label: "Kho",
+            value: `${product.stock} sản phẩm`,
+        },
     ];
 
-    // Specs mock data
-    const specs = isRacket
-        ? [
-              { label: "Trọng lượng / Chu vi cán", value: "3U (Avg. 88g) G5, 4U (Avg. 83g) G5" },
-              { label: "Độ cứng đũa vợt", value: "Cứng (Stiff)" },
-              { label: "Khung vợt", value: "HM Graphite / Namd / VOLUME CUT RESIN / Tungsten" },
-              { label: "Sức căng khuyến nghị", value: "4U: 20 - 28 lbs, 3U: 21 - 29 lbs" },
-              { label: "Thương hiệu", value: "Yonex (Nhật Bản)" },
-          ]
-        : isShoes
-        ? [
-              { label: "Công nghệ đế", value: "Power Cushion +, Radial Blade Sole" },
-              { label: "Chất liệu thân", value: "Synthetic Leather, Durable Skin Light" },
-              { label: "Chất liệu đế", value: "Rubber Sole (Đế cao su chuyên dụng)" },
-              { label: "Trọng lượng", value: "Khoảng 290g / chiếc (Size 41)" },
-              { label: "Thương hiệu", value: "Yonex (Nhật Bản)" },
-          ]
-        : [
-              { label: "Chất liệu", value: "100% Polyester Cao Cấp" },
-              { label: "Công nghệ vải", value: "TruBreeze (Thấm hút mồ hôi siêu tốc)" },
-              { label: "Khả năng co giãn", value: "4 chiều, thoáng khí tối đa" },
-              { label: "Thương hiệu", value: "TripleT Badminton" },
-          ];
-
-    // Find 3 related products
-    const relatedProducts = products
-        .filter((p) => p.category === product.category && p.id !== product.id)
-        .slice(0, 3);
+    const relatedProducts = [];
+    const formatPrice = (price) => {
+        return new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+        }).format(price || 0);
+    };
 
     const handleAddToCart = () => {
         setShowAlert(true);
-        setTimeout(() => setShowAlert(false), 3000);
+
+        setTimeout(() => {
+            setShowAlert(false);
+        }, 3000);
     };
 
     const handleBuyNow = () => {
         navigate("/checkout");
     };
+
 
     return (
         <div className="bg-slate-50 dark:bg-[#0c1219] py-8 transition-colors duration-300">
@@ -83,7 +98,7 @@ export default function ProductDetail() {
                     <span className="text-xl">🛒</span>
                     <div>
                         <p className="font-semibold text-sm">Đã thêm vào giỏ hàng!</p>
-                        <p className="text-xs opacity-80">Sản phẩm: {product.name}</p>
+                        <p className="text-xs opacity-80">Sản phẩm: {product.productName}</p>
                     </div>
                     <Link to="/cart" className="ml-4 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500">
                         Xem giỏ hàng
@@ -98,7 +113,7 @@ export default function ProductDetail() {
                     <span>/</span>
                     <Link to="/product" className="hover:text-emerald-500 transition-colors">Sản phẩm</Link>
                     <span>/</span>
-                    <span className="text-slate-900 dark:text-white truncate max-w-[200px]">{product.name}</span>
+                    <span className="text-slate-900 dark:text-white truncate max-w-[200px]">{product.productName}</span>
                 </nav>
 
                 {/* Main Product Info Container */}
@@ -108,26 +123,33 @@ export default function ProductDetail() {
                         <div className="group overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 aspect-square flex items-center justify-center shadow-sm">
                             <img
                                 src={selectedImage}
-                                alt={product.name}
+                                alt={product.productName}
                                 className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                             />
                         </div>
                         {/* Thumbnails */}
                         <div className="grid grid-cols-4 gap-3">
-                            {[product.image, "https://images.unsplash.com/photo-1617083934555-ac7d4fee8909?w=600&q=80", "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=600&q=80", product.image].map((img, index) => (
-                                <button
-                                    key={index}
-                                    type="button"
-                                    onClick={() => setSelectedImage(img)}
-                                    className={`aspect-square overflow-hidden rounded-xl border-2 transition-all duration-300 ${
-                                        selectedImage === img
+                            {product.images?.map((img, index) => {
+                                const imageUrl = `${img}`;
+
+                                return (
+                                    <button
+                                        key={index}
+                                        type="button"
+                                        onClick={() => setSelectedImage(imageUrl)}
+                                        className={`aspect-square overflow-hidden rounded-xl border-2 transition-all duration-300 ${selectedImage === imageUrl
                                             ? "border-emerald-500 shadow-md shadow-emerald-500/10 scale-95"
                                             : "border-slate-200 hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
-                                    }`}
-                                >
-                                    <img src={img} alt="Thumbnail" className="h-full w-full object-cover" />
-                                </button>
-                            ))}
+                                            }`}
+                                    >
+                                        <img
+                                            src={imageUrl}
+                                            alt="Thumbnail"
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -135,7 +157,7 @@ export default function ProductDetail() {
                     <div className="lg:col-span-6 flex flex-col justify-between space-y-6">
                         <div className="space-y-4">
                             <div className="flex items-center gap-2">
-                                <span className="tt-label text-xs">{product.category}</span>
+                                <span className="tt-label text-xs">{product.categoryName}</span>
                                 {product.badge && (
                                     <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                                         {product.badge}
@@ -144,13 +166,13 @@ export default function ProductDetail() {
                             </div>
 
                             <h1 className="text-2xl font-bold leading-tight text-slate-900 dark:text-white md:text-3xl">
-                                {product.name}
+                                {product.productName}
                             </h1>
 
                             {/* Ratings & Sales Info */}
                             <div className="flex items-center gap-3 text-sm">
                                 <div className="flex items-center text-amber-500">
-                                    {"★" .repeat(5)}
+                                    {"★".repeat(5)}
                                 </div>
                                 <span className="font-semibold text-slate-700 dark:text-slate-300">4.9</span>
                                 <span className="text-slate-400">|</span>
@@ -192,11 +214,10 @@ export default function ProductDetail() {
                                             key={size}
                                             type="button"
                                             onClick={() => setSelectedSize(size)}
-                                            className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
-                                                selectedSize === size
-                                                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-                                            }`}
+                                            className={`rounded-xl border px-4 py-2 text-sm ${selectedSize === size
+                                                ? "border-emerald-500 bg-emerald-100"
+                                                : "border-slate-300"
+                                                }`}
                                         >
                                             {size}
                                         </button>
@@ -210,18 +231,15 @@ export default function ProductDetail() {
                                 <div className="flex flex-wrap gap-3">
                                     {colors.map((color) => (
                                         <button
-                                            key={color.name}
+                                            key={color}
                                             type="button"
-                                            onClick={() => setSelectedColor(color.name)}
-                                            title={color.name}
-                                            className={`group relative flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 ${
-                                                selectedColor === color.name ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "border-slate-300"
-                                            }`}
-                                            style={{ backgroundColor: color.value === "#f8fafc" ? "#fff" : color.value }}
+                                            onClick={() => setSelectedColor(color)}
+                                            className={`rounded-xl border px-4 py-2 text-sm transition ${selectedColor === color
+                                                    ? "border-emerald-500 bg-emerald-100 text-emerald-700"
+                                                    : "border-slate-300"
+                                                }`}
                                         >
-                                            {selectedColor === color.name && (
-                                                <span className={`h-2.5 w-2.5 rounded-full ${color.value === "#f8fafc" ? "bg-slate-900" : "bg-white"}`} />
-                                            )}
+                                            {color}
                                         </button>
                                     ))}
                                 </div>
@@ -287,11 +305,10 @@ export default function ProductDetail() {
                                 key={tab.id}
                                 type="button"
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`pb-4 text-sm font-semibold relative transition-all duration-300 ${
-                                    activeTab === tab.id
-                                        ? "text-emerald-500"
-                                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                                }`}
+                                className={`pb-4 text-sm font-semibold relative transition-all duration-300 ${activeTab === tab.id
+                                    ? "text-emerald-500"
+                                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                                    }`}
                             >
                                 {tab.label}
                                 {activeTab === tab.id && (
@@ -359,7 +376,7 @@ export default function ProductDetail() {
                                 <article key={p.id} className="group tt-card-interactive flex h-full flex-col overflow-hidden">
                                     <div className="relative aspect-square shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-700/80">
                                         <img
-                                            src={p.image}
+                                            src={p.thumbnail}
                                             alt={p.name}
                                             className="tt-img-zoom h-full w-full object-cover"
                                         />
