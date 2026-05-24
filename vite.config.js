@@ -7,4 +7,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+  proxy: {
+    "/momo": {
+      target: "https://test-payment.momo.vn",
+      changeOrigin: true,
+      secure: false,
+      rewrite: (path) => path.replace(/^\/momo/, "")
+    }
+  }
+}
 })

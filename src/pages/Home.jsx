@@ -18,10 +18,21 @@ export default function Home() {
     const [products, setProducts] = useState([]);
 
     useEffect(() => {
-        axios.get("https://localhost:7147/api/Products")
-            .then(res => {
-                const filtered = res.data.filter(p => p.status === 1);
-                const featuredProducts = filtered.slice(0, 4);
+        Promise.all([
+            axios.get("https://localhost:7147/api/Products"),
+            axios.get("https://localhost:7147/api/ProductVariants")
+        ])
+            .then(([productsRes, variantsRes]) => {
+                const variants = variantsRes.data;
+                const filtered = productsRes.data.filter(p => p.status === 1);
+                // Tính tổng stock cho từng product
+                const productsWithStock = filtered.map(product => {
+                    const totalStock = variants
+                        .filter(v => v.productId === product.productId)
+                        .reduce((acc, v) => acc + v.stock, 0);
+                    return { ...product, stock: totalStock };
+                });
+                const featuredProducts = productsWithStock.slice(0, 4);
                 setProducts(featuredProducts);
             })
             .catch(err => console.log(err));

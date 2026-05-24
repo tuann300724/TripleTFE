@@ -1,331 +1,510 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { products, formatPrice } from "../data/products";
+import axios from "axios";
+import { createMomoPayment } from "../service/momoService";
 
 export default function Checkout() {
     const navigate = useNavigate();
 
-    // Mock invoice products
-    const [invoiceItems] = useState([
-        {
-            ...products[0],
-            quantity: 1,
-            selectedSize: "4U/G5",
-            selectedColor: "Đen Emerald",
-        },
-        {
-            ...products[2],
-            quantity: 1,
-            selectedSize: "41",
-            selectedColor: "Trắng Titan",
-        },
-    ]);
+    const [user] = useState(() =>
+        JSON.parse(localStorage.getItem("user"))
+    );
 
+    const [invoiceItems, setInvoiceItems] = useState([]);
     const [paymentMethod, setPaymentMethod] = useState("cod");
 
-    // Calculation formulas
-    const subtotal = invoiceItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const discount = subtotal * 0.1; // Apply default promo discount for testing
-    const shipping = 0; // Free ship for testing
-    const total = subtotal + shipping - discount;
+    const [receiverName, setReceiverName] = useState("");
+    const [receiverPhone, setReceiverPhone] = useState("");
+    const [receiverEmail, setReceiverEmail] = useState("");
+    const [shippingAddress, setShippingAddress] = useState("");
 
-    const handlePlaceOrder = () => {
-        navigate("/success");
+    // =========================
+    // LOAD USER INFO
+    // =========================
+    useEffect(() => {
+        if (!user?.userId) return;
+
+        const loadUserInfo = async () => {
+            const res = await axios.get(
+                "https://localhost:7147/api/UserProfile/" + user.userId
+            );
+
+            const u = res.data;
+
+            setReceiverName(u.fullName || "");
+            setReceiverPhone(u.phone || "");
+            setReceiverEmail(u.email || "");
+            setShippingAddress(u.address || "");
+        };
+
+        loadUserInfo();
+    }, [user?.userId]);
+
+    // =========================
+    // LOAD CART
+    // =========================
+    useEffect(() => {
+        if (!user) return;
+
+        const loadCheckout = async () => {
+            try {
+                const cartRes = await axios.get(
+                    "https://localhost:7147/api/Carts"
+                );
+
+                const userCart = cartRes.data.find(
+                    (c) => c.userId === user.userId
+                );
+
+                if (!userCart) return;
+
+                const items = await Promise.all(
+                    userCart.cartItems.map(async (item) => {
+                        const variantRes = await axios.get(
+                            `https://localhost:7147/api/ProductVariants/${item.variantId}`
+                        );
+
+                        const variant = variantRes.data;
+
+                        const productRes = await axios.get(
+                            `https://localhost:7147/api/Products/${variant.productId}`
+                        );
+
+                        const product = productRes.data;
+
+                        return {
+                            ...item,
+                            name: product.productName,
+                            image: product.thumbnail,
+                            price: variant.price,
+                            selectedColor: variant.color,
+                            selectedSize: variant.size,
+                        };
+                    })
+                );
+
+                setInvoiceItems(items);
+            } catch (err) {
+                console.log(err);
+            }
+        };
+
+        loadCheckout();
+    }, []);
+
+    // =========================
+    // TOTAL
+    // =========================
+    const subtotal = invoiceItems.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0
+    );
+
+    const total = subtotal;
+
+    const formatPrice = (price) =>
+        new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+        }).format(price || 0);
+
+    // =========================
+    // PLACE ORDER
+    // =========================
+    const handlePlaceOrder = async () => {
+        if (
+            !receiverName.trim() ||
+            !receiverPhone.trim() ||
+            !receiverEmail.trim() ||
+            !shippingAddress.trim()
+        ) {
+            alert("Vui lòng nhập đầy đủ thông tin");
+            return;
+        }
+
+        try {
+            // ================= 1. TẠO ORDER TRÊN BACKEND =================
+            const orderRes = await axios.post(
+                "https://localhost:7147/api/Orders",
+                {
+                    userId: user.userId,
+                    orderStatus: "Pending",
+                    totalAmount: total,
+                }
+            );
+
+            const order = orderRes.data;
+
+            // ================= 2. TẠO CHI TIẾT ĐƠN HÀNG =================
+            for (const item of invoiceItems) {
+                await axios.post(
+                    "https://localhost:7147/api/OrderDetails",
+                    {
+                        orderId: order.orderId,
+                        variantId: item.variantId,
+                        productName: item.name,
+                        variantName: `${item.selectedSize} / ${item.selectedColor}`,
+                        productImage: item.image,
+                        quantity: item.quantity,
+                        unitPrice: item.price,
+                    }
+                );
+            }
+
+            // ================= 3. TẠO TRẠNG THÁI THANH TOÁN =================
+            await axios.post(
+                "https://localhost:7147/api/Payments",
+                {
+                    orderId: order.orderId,
+                    amount: total,
+                    paymentMethod: paymentMethod === "momo" ? "MOMO" : "COD",
+                    paymentStatus: paymentMethod === "momo" ? "Waiting" : "Pending",
+                }
+            );
+
+            // ================= 4. XỬ LÝ LUỒNG MOMO THẬT =================
+            if (paymentMethod === "momo") {
+                // Đóng gói dữ liệu State để cất vào localStorage
+                const successStateForMomo = {
+                    order,
+                    items: invoiceItems,
+                    shippingInfo: {
+                        receiverName,
+                        receiverPhone,
+                        shippingAddress,
+                    },
+                    paymentMethod: "MOMO",
+                };
+
+                // Lưu trữ tạm thời để trang /success sau khi quay về lấy ra render
+                localStorage.setItem("momo_payment_state", JSON.stringify(successStateForMomo));
+
+                // Gọi Service tạo liên kết thanh toán MoMo
+                const momoRes = await createMomoPayment(order.orderId, total);
+
+                // Ép kiểu an toàn từ Object/String JSON trả về
+                const data =
+                    typeof momoRes === "string"
+                        ? JSON.parse(momoRes)
+                        : momoRes;
+
+                console.log("MOMO RESPONSE PROCESSING:", data);
+
+                // Chuyển hướng trình duyệt sang MoMo Real
+                if (data?.payUrl) {
+                    window.location.href = data.payUrl;
+                    return;
+                }
+
+                alert("Không tạo được link MoMo");
+                console.error(data);
+                return;
+            }
+
+            // ================= 5. XỬ LÝ LUỒNG COD TRUYỀN THỐNG =================
+            for (const item of invoiceItems) {
+                await axios.delete(
+                    `https://localhost:7147/api/CartItems/${item.cartItemId}`
+                );
+            }
+
+            alert("Đặt hàng thành công");
+
+            navigate("/success", {
+                state: {
+                    order,
+                    items: invoiceItems,
+                    shippingInfo: {
+                        receiverName,
+                        receiverPhone,
+                        shippingAddress,
+                    },
+                    paymentMethod: "COD",
+                },
+            });
+
+        } catch (err) {
+            console.log(err);
+            alert("Đặt hàng thất bại");
+        }
     };
+
 
     return (
         <div className="bg-slate-50 dark:bg-[#0c1219] py-12 transition-colors duration-300 min-h-screen">
+
             <div className="mx-auto max-w-6xl px-6 md:px-12">
+
                 {/* Visual Progress Steps */}
                 <div className="flex justify-center items-center mb-10 max-w-md mx-auto">
+
                     <div className="flex items-center text-slate-400 dark:text-slate-500">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-bold">1</span>
-                        <span className="ml-2 text-xs font-semibold hidden sm:inline">Giỏ hàng</span>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-bold">
+                            1
+                        </span>
+                        <span className="ml-2 text-xs font-semibold hidden sm:inline">
+                            Giỏ hàng
+                        </span>
                     </div>
+
                     <div className="flex-1 h-0.5 bg-slate-200 dark:bg-slate-800 mx-4"></div>
+
                     <div className="flex items-center text-emerald-500 font-bold">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-xs text-white">2</span>
-                        <span className="ml-2 text-xs hidden sm:inline">Thanh toán</span>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-xs text-white">
+                            2
+                        </span>
+                        <span className="ml-2 text-xs hidden sm:inline">
+                            Thanh toán
+                        </span>
                     </div>
+
                     <div className="flex-1 h-0.5 bg-slate-200 dark:bg-slate-800 mx-4"></div>
+
                     <div className="flex items-center text-slate-400 dark:text-slate-500">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-bold">3</span>
-                        <span className="ml-2 text-xs hidden sm:inline">Thành công</span>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-bold">
+                            3
+                        </span>
+                        <span className="ml-2 text-xs hidden sm:inline">
+                            Thành công
+                        </span>
                     </div>
+
                 </div>
 
-                {/* Page Grid Layout */}
                 <div className="grid gap-8 lg:grid-cols-12 items-start">
-                    {/* Left Column: Forms */}
+
+                    {/* LEFT */}
                     <div className="lg:col-span-7 space-y-6">
-                        {/* Receiver Info */}
+
+                        {/* SHIPPING */}
                         <div className="tt-card p-6 md:p-8 space-y-4">
+
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
                                 Thông tin giao hàng
                             </h2>
 
-                            <form className="grid gap-4 sm:grid-cols-2" onSubmit={(e) => e.preventDefault()}>
+                            <form
+                                className="grid gap-4 sm:grid-cols-2"
+                                onSubmit={(e) => e.preventDefault()}
+                            >
+
                                 <div className="sm:col-span-2 space-y-1">
-                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Họ và tên người nhận</label>
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                        Họ và tên người nhận
+                                    </label>
+
                                     <input
                                         type="text"
                                         required
+                                        value={receiverName}
+                                        onChange={(e) => setReceiverName(e.target.value)}
                                         placeholder="Nguyễn Văn A"
                                         className="tt-input"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Số điện thoại</label>
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                        Số điện thoại
+                                    </label>
+
                                     <input
                                         type="tel"
                                         required
+                                        value={receiverPhone}
+                                        onChange={(e) => setReceiverPhone(e.target.value)}
                                         placeholder="0987654321"
                                         className="tt-input"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Email (Không bắt buộc)</label>
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                        Email
+                                    </label>
+
                                     <input
                                         type="email"
+                                        required
+                                        value={receiverEmail}
+                                        onChange={(e) => setReceiverEmail(e.target.value)}
                                         placeholder="name@example.com"
                                         className="tt-input"
                                     />
                                 </div>
 
                                 <div className="sm:col-span-2 space-y-1">
-                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Địa chỉ giao hàng</label>
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                        Địa chỉ giao hàng
+                                    </label>
+
                                     <input
                                         type="text"
                                         required
-                                        placeholder="Số nhà, tên đường, phường/xã, quận/huyện..."
+                                        value={shippingAddress}
+                                        onChange={(e) => setShippingAddress(e.target.value)}
+                                        placeholder="Số nhà, tên đường..."
                                         className="tt-input"
-                                    />
+                                        />
                                 </div>
 
-                                <div className="sm:col-span-2 space-y-1">
-                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ghi chú giao hàng</label>
-                                    <textarea
-                                        rows={3}
-                                        placeholder="Ghi chú về thời gian giao hàng, chỉ dẫn đường đi..."
-                                        className="tt-input resize-none"
-                                    ></textarea>
-                                </div>
                             </form>
                         </div>
 
-                        {/* Payment Method selection */}
+                        {/* PAYMENT */}
                         <div className="tt-card p-6 md:p-8 space-y-6">
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
                                 Phương thức thanh toán
                             </h2>
 
-                            <div className="space-y-3">
-                                {/* COD */}
-                                <label className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
-                                    paymentMethod === "cod"
-                                        ? "border-emerald-500 bg-emerald-500/5"
-                                        : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                            {/* COD */}
+                            <label className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === "cod"
+                                ? "border-emerald-500 bg-emerald-500/5"
+                                : "border-slate-200 dark:border-slate-800"
                                 }`}>
-                                    <input
-                                        type="radio"
-                                        name="payment"
-                                        checked={paymentMethod === "cod"}
-                                        onChange={() => setPaymentMethod("cod")}
-                                        className="mt-1 h-4 w-4 text-emerald-500 focus:ring-0"
-                                    />
-                                    <div>
-                                        <span className="block font-bold text-sm text-slate-900 dark:text-white">COD (Thanh toán khi nhận hàng)</span>
-                                        <span className="block text-xs text-slate-400 mt-0.5">Nhận hàng và thanh toán trực tiếp với nhân viên giao hàng.</span>
-                                    </div>
-                                </label>
+                                <input
+                                    type="radio"
+                                    name="payment"
+                                    checked={paymentMethod === "cod"}
+                                    onChange={() => setPaymentMethod("cod")}
+                                    className="mt-1 h-4 w-4 text-emerald-500 focus:ring-0"
+                                />
+                                <div>
+                                    <span className="block font-bold text-sm text-slate-900 dark:text-white">
+                                        COD (Thanh toán khi nhận hàng)
+                                    </span>
+                                    <span className="block text-xs text-slate-400 mt-0.5">
+                                        Nhận hàng và thanh toán trực tiếp
+                                    </span>
+                                </div>
+                            </label>
 
-                                {/* Bank Transfer */}
-                                <label className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
-                                    paymentMethod === "bank"
-                                        ? "border-emerald-500 bg-emerald-500/5"
-                                        : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                            {/* MOMO */}
+                            <label className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === "momo"
+                                ? "border-pink-500 bg-pink-100/20"
+                                : "border-slate-200 dark:border-slate-800"
                                 }`}>
-                                    <input
-                                        type="radio"
-                                        name="payment"
-                                        checked={paymentMethod === "bank"}
-                                        onChange={() => setPaymentMethod("bank")}
-                                        className="mt-1 h-4 w-4 text-emerald-500 focus:ring-0"
-                                    />
-                                    <div className="w-full">
-                                        <span className="block font-bold text-sm text-slate-900 dark:text-white">Chuyển khoản ngân hàng</span>
-                                        <span className="block text-xs text-slate-400 mt-0.5">Thanh toán qua app ngân hàng bằng mã QR tự động.</span>
-
-                                        {/* Mock Bank Account Info & QR Code */}
-                                        {paymentMethod === "bank" && (
-                                            <div className="mt-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 grid gap-4 sm:grid-cols-12 items-center">
-                                                <div className="sm:col-span-7 space-y-2 text-xs">
-                                                    <p className="text-slate-400">Ngân hàng: <span className="font-bold text-slate-800 dark:text-slate-200">MB BANK (Quân Đội)</span></p>
-                                                    <p className="text-slate-400">Số tài khoản: <span className="font-bold text-slate-800 dark:text-slate-200">1902 9999 9999</span></p>
-                                                    <p className="text-slate-400">Chủ tài khoản: <span className="font-bold text-slate-800 dark:text-slate-200">CONG TY TNHH TRIPLET</span></p>
-                                                    <p className="text-slate-400">Nội dung chuyển khoản: <span className="font-bold text-slate-800 dark:text-slate-200">TTL 10245</span></p>
-                                                </div>
-                                                <div className="sm:col-span-5 flex flex-col items-center gap-2 p-2 border-l border-slate-100 dark:border-slate-800">
-                                                    {/* Beautiful Mock QR Graphic */}
-                                                    <div className="relative h-28 w-28 border-2 border-emerald-500 p-1.5 rounded-lg bg-white flex items-center justify-center shadow-inner">
-                                                        {/* Simulated QR block layout */}
-                                                        <div className="grid grid-cols-5 gap-1 w-full h-full opacity-80">
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-100 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-100 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-100 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-100 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-emerald-500 rounded-sm flex items-center justify-center text-[8px] text-white font-extrabold">TT</div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-100 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-100 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                            <div className="bg-slate-100 rounded-sm"></div>
-                                                            <div className="bg-slate-100 rounded-sm"></div>
-                                                            <div className="bg-slate-900 rounded-sm"></div>
-                                                        </div>
-                                                    </div>
-                                                    <span className="text-[10px] text-slate-400 font-semibold text-center">Quét mã để thanh toán</span>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </label>
-
-                                {/* Credit Card */}
-                                <label className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
-                                    paymentMethod === "card"
-                                        ? "border-emerald-500 bg-emerald-500/5"
-                                        : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
-                                }`}>
-                                    <input
-                                        type="radio"
-                                        name="payment"
-                                        checked={paymentMethod === "card"}
-                                        onChange={() => setPaymentMethod("card")}
-                                        className="mt-1 h-4 w-4 text-emerald-500 focus:ring-0"
-                                    />
-                                    <div className="w-full">
-                                        <span className="block font-bold text-sm text-slate-900 dark:text-white">Thẻ tín dụng (Visa, Mastercard, JCB)</span>
-                                        <span className="block text-xs text-slate-400 mt-0.5">Thanh toán bảo mật trực tiếp bằng thẻ quốc tế.</span>
-
-                                        {paymentMethod === "card" && (
-                                            <div className="mt-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 grid gap-4 grid-cols-2">
-                                                <div className="col-span-2 space-y-1">
-                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Số thẻ</label>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="4123 4567 8901 2345"
-                                                        className="tt-input text-sm py-2"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Hạn sử dụng</label>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="MM/YY"
-                                                        className="tt-input text-sm py-2"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mã CVV</label>
-                                                    <input
-                                                        type="password"
-                                                        placeholder="•••"
-                                                        className="tt-input text-sm py-2"
-                                                    />
-                                                </div>
-                                                <div className="col-span-2 space-y-1">
-                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tên in trên thẻ</label>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="NGUYEN VAN A"
-                                                        className="tt-input text-sm py-2 uppercase"
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </label>
-                            </div>
+                                <input
+                                    type="radio"
+                                    name="payment"
+                                    checked={paymentMethod === "momo"}
+                                    onChange={() => setPaymentMethod("momo")}
+                                    className="mt-1 h-4 w-4 text-pink-500 focus:ring-0"
+                                />
+                                <div>
+                                    <span className="block font-bold text-sm text-slate-900 dark:text-white">
+                                        Momo (Thanh toán qua ví Momo)
+                                    </span>
+                                    <span className="block text-xs text-slate-400 mt-0.5">
+                                        Quét mã QR hoặc thanh toán qua app Momo
+                                    </span>
+                                </div>
+                            </label>
                         </div>
+
                     </div>
 
-                    {/* Right Column: Detailed Invoice */}
+                    {/* RIGHT */}
                     <div className="lg:col-span-5 space-y-6">
+
                         <div className="tt-card p-6 md:p-8 space-y-4 shadow-xl border border-slate-200/50 dark:border-slate-800/50">
+
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
                                 Chi tiết hóa đơn
                             </h2>
 
-                            {/* Itemized List */}
+                            {/* ITEMS */}
                             <div className="divide-y divide-slate-100 dark:divide-slate-800/60 max-h-60 overflow-y-auto pr-2">
+
                                 {invoiceItems.map((item) => (
-                                    <div key={item.id} className="flex gap-4 py-3 items-center">
+
+                                    <div
+                                        key={item.cartItemId}
+                                        className="flex gap-4 py-3 items-center"
+                                    >
+
                                         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 bg-white">
-                                            <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+
+                                            <img
+                                                src={item.image}
+                                                alt={item.name}
+                                                className="h-full w-full object-cover"
+                                            />
+
                                         </div>
+
                                         <div className="flex-1 space-y-0.5">
+
                                             <h4 className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">
                                                 {item.name}
                                             </h4>
+
                                             <p className="text-xs text-slate-400">
-                                                Phân loại: {item.selectedSize} / {item.selectedColor}
+                                                Phân loại:
+                                                {" "}
+                                                {item.selectedSize}
+                                                {" / "}
+                                                {item.selectedColor}
                                             </p>
+
                                             <div className="flex justify-between items-center text-xs">
-                                                <span className="text-slate-400">SL: {item.quantity}</span>
-                                                <span className="font-semibold text-slate-700 dark:text-slate-300">
-                                                    {formatPrice(item.price * item.quantity)}
+
+                                                <span className="text-slate-400">
+                                                    SL: {item.quantity}
                                                 </span>
+
+                                                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                                    {formatPrice(
+                                                        item.price * item.quantity
+                                                    )}
+                                                </span>
+
                                             </div>
+
                                         </div>
+
                                     </div>
+
                                 ))}
+
                             </div>
 
-                            {/* Order Costs Breakdown */}
+                            {/* TOTAL */}
                             <div className="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-2 text-sm">
+
                                 <div className="flex justify-between text-slate-500 dark:text-slate-400">
+
                                     <span>Tạm tính</span>
+
                                     <span className="font-semibold text-slate-800 dark:text-slate-200">
                                         {formatPrice(subtotal)}
                                     </span>
+
                                 </div>
+
                                 <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                                    <span>Giảm giá (Áp dụng mã TRIPLET10)</span>
-                                    <span className="font-semibold text-emerald-500">
-                                        -{formatPrice(discount)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between text-slate-500 dark:text-slate-400">
+
                                     <span>Phí giao hàng</span>
+
                                     <span className="font-semibold text-slate-800 dark:text-slate-200">
-                                        {shipping === 0 ? "Miễn phí" : formatPrice(shipping)}
+                                       Miễn phí
                                     </span>
+
                                 </div>
+
                             </div>
 
-                            {/* Total Cost */}
                             <div className="border-t border-slate-100 dark:border-slate-800 pt-4 flex justify-between items-baseline">
-                                <span className="text-base font-bold text-slate-900 dark:text-white">Tổng cộng</span>
+
+                                <span className="text-base font-bold text-slate-900 dark:text-white">
+                                    Tổng cộng
+                                </span>
+
                                 <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
                                     {formatPrice(total)}
                                 </span>
-                            </div>
+
+                                </div>
 
                             <button
                                 type="button"
@@ -335,13 +514,21 @@ export default function Checkout() {
                                 Xác nhận thanh toán
                             </button>
 
-                            <Link to="/cart" className="block text-center text-xs font-semibold text-emerald-500 hover:text-emerald-600 transition-colors pt-2">
+                            <Link
+                                to="/cart"
+                                className="block text-center text-xs font-semibold text-emerald-500 hover:text-emerald-600 transition-colors pt-2"
+                            >
                                 Quay lại giỏ hàng chỉnh sửa
                             </Link>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
     );
 }

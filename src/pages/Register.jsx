@@ -1,9 +1,19 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import axios from "axios";
 
 export default function Register() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [fullName, setFullName] = useState("");
+    const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
+    const [address, setAddress] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const navigate = useNavigate();
 
     return (
         <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-900 px-4 py-12 sm:px-6 lg:px-8">
@@ -40,7 +50,44 @@ export default function Register() {
                     </div>
 
                     {/* Form */}
-                    <form className="mt-8 space-y-4" onSubmit={(e) => e.preventDefault()}>
+                    <form
+                        className="mt-8 space-y-4"
+                        onSubmit={async (e) => {
+                            e.preventDefault();
+                            setError("");
+                            if (password !== confirmPassword) {
+                                setError("Mật khẩu xác nhận không khớp");
+                                return;
+                            }
+                            setLoading(true);
+                            try {
+                                // 1. Đăng ký user
+                                const now = new Date().toISOString();
+                                const userRes = await axios.post("https://localhost:7147/api/User", {
+                                    email,
+                                    passwordHash: password,
+                                    role: "Customer",
+                                    status: "Active",
+                                    createdAt: now,
+                                    updatedAt: now
+                                });
+                                const userId = userRes.data.userId || userRes.data.id || userRes.data.UserId || userRes.data.ID;
+                                // 2. Tạo profile
+                                await axios.post("https://localhost:7147/api/UserProfile", {
+                                    userId,
+                                    fullName,
+                                    phone,
+                                    address,
+                                    avatar: null
+                                });
+                                setLoading(false);
+                                navigate("/login");
+                            } catch (err) {
+                                setLoading(false);
+                                setError("Đăng ký thất bại. Vui lòng thử lại hoặc dùng email khác.");
+                            }
+                        }}
+                    >
                         <div className="space-y-1">
                             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">Họ và tên</label>
                             <div className="relative">
@@ -53,6 +100,8 @@ export default function Register() {
                                     type="text"
                                     required
                                     placeholder="Nguyễn Văn A"
+                                    value={fullName}
+                                    onChange={e => setFullName(e.target.value)}
                                     className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-4 py-2.5 text-white placeholder:text-slate-500 outline-none transition-all duration-300 hover:border-emerald-500/50 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                                 />
                             </div>
@@ -70,6 +119,8 @@ export default function Register() {
                                     type="email"
                                     required
                                     placeholder="name@example.com"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
                                     className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-4 py-2.5 text-white placeholder:text-slate-500 outline-none transition-all duration-300 hover:border-emerald-500/50 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                                 />
                             </div>
@@ -87,6 +138,8 @@ export default function Register() {
                                     type="tel"
                                     required
                                     placeholder="0987654321"
+                                    value={phone}
+                                    onChange={e => setPhone(e.target.value)}
                                     className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-4 py-2.5 text-white placeholder:text-slate-500 outline-none transition-all duration-300 hover:border-emerald-500/50 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                                 />
                             </div>
@@ -104,6 +157,8 @@ export default function Register() {
                                     type={showPassword ? "text" : "password"}
                                     required
                                     placeholder="••••••••"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
                                     className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-10 py-2.5 text-white placeholder:text-slate-500 outline-none transition-all duration-300 hover:border-emerald-500/50 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                                 />
                                 <button
@@ -137,6 +192,8 @@ export default function Register() {
                                     type={showConfirmPassword ? "text" : "password"}
                                     required
                                     placeholder="••••••••"
+                                    value={confirmPassword}
+                                    onChange={e => setConfirmPassword(e.target.value)}
                                     className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-10 py-2.5 text-white placeholder:text-slate-500 outline-none transition-all duration-300 hover:border-emerald-500/50 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                                 />
                                 <button
@@ -169,10 +226,15 @@ export default function Register() {
                             </label>
                         </div>
 
+                        {error && <div className="text-red-400 text-sm text-center font-semibold">{error}</div>}
                         <div>
-                            <Link to="/login" className="tt-hover-scale flex w-full items-center justify-center rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 transition-all duration-300">
-                                Đăng ký
-                            </Link>
+                            <button
+                                type="submit"
+                                className="tt-hover-scale flex w-full items-center justify-center rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 transition-all duration-300 disabled:opacity-60"
+                                disabled={loading}
+                            >
+                                {loading ? "Đang đăng ký..." : "Đăng ký"}
+                            </button>
                         </div>
                     </form>
 

@@ -129,7 +129,6 @@ export default function Profile() {
         { id: "info", name: "Thông tin cá nhân", icon: "👤" },
         { id: "orders", name: "Lịch sử mua hàng", icon: "📦", badge: "2" },
         { id: "wishlist", name: "Danh sách yêu thích", icon: "❤️", badge: "3" },
-        { id: "vouchers", name: "Kho ưu đãi & Voucher", icon: "🎟️" },
         { id: "security", name: "Bảo mật tài khoản", icon: "🔒" },
     ];
 
@@ -305,15 +304,7 @@ export default function Profile() {
                                                     title="Email đăng nhập không thể thay đổi"
                                                 />
                                             </div>
-                                            <div className="space-y-1">
-                                                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Ngày sinh</label>
-                                                <input 
-                                                    type="date" 
-                                                    value={formData.birthdate}
-                                                    onChange={(e) => setFormData({...formData, birthdate: e.target.value})}
-                                                    className="tt-input" 
-                                                />
-                                            </div>
+                                          
                                         </div>
 
                                         <div className="space-y-1">
@@ -327,47 +318,6 @@ export default function Profile() {
                                             />
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                                            <div className="space-y-1">
-                                                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Giới tính</label>
-                                                <select 
-                                                    value={formData.gender}
-                                                    onChange={(e) => setFormData({...formData, gender: e.target.value})}
-                                                    className="tt-input"
-                                                >
-                                                    <option value="male">Nam</option>
-                                                    <option value="female">Nữ</option>
-                                                    <option value="other">Khác</option>
-                                                </select>
-                                            </div>
-
-                                            {/* Badminton customizations */}
-                                            <div className="space-y-1">
-                                                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Trình độ chơi cầu</label>
-                                                <select 
-                                                    value={formData.level}
-                                                    onChange={(e) => setFormData({...formData, level: e.target.value})}
-                                                    className="tt-input"
-                                                >
-                                                    <option value="Mới chơi">Nhập môn / Giải trí</option>
-                                                    <option value="Trung bình">Trung bình</option>
-                                                    <option value="Khá">Khá (Có phong trào)</option>
-                                                    <option value="Chuyên nghiệp">Chuyên nghiệp / VĐV</option>
-                                                </select>
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Tay thuận</label>
-                                                <select 
-                                                    value={formData.hand}
-                                                    onChange={(e) => setFormData({...formData, hand: e.target.value})}
-                                                    className="tt-input"
-                                                >
-                                                    <option value="Phải">Tay phải</option>
-                                                    <option value="Trái">Tay trái</option>
-                                                </select>
-                                            </div>
-                                        </div>
 
                                         <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
                                             <button 
@@ -549,60 +499,6 @@ export default function Profile() {
                                     )}
                                 </div>
                             )}
-
-                            {/* Tab 4: Vouchers */}
-                            {activeTab === "vouchers" && (
-                                <div className="space-y-6">
-                                    <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Kho Voucher & Ưu đãi</h3>
-                                        <p className="text-xs text-slate-400 mt-1">Các mã giảm giá được áp dụng trực tiếp tại bước thanh toán của bạn.</p>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        {mockVouchers.map((v, index) => (
-                                            <div 
-                                                key={v.code} 
-                                                className="relative overflow-hidden bg-slate-50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl p-5 flex gap-4 shadow-sm hover:shadow-md hover:border-emerald-500/20 transition-all duration-300"
-                                            >
-                                                {/* Dash border separating standard coupon visual */}
-                                                <div className="absolute left-[80px] top-0 bottom-0 border-r border-dashed border-slate-200 dark:border-slate-800/80" />
-                                                
-                                                {/* Left card graphic */}
-                                                <div className="w-[60px] shrink-0 flex flex-col justify-center items-center gap-1.5 select-none text-emerald-600 dark:text-emerald-400">
-                                                    <span className="text-3xl">🎟️</span>
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-center">T-CODE</span>
-                                                </div>
-
-                                                {/* Right card details */}
-                                                <div className="flex-1 pl-4 flex flex-col justify-between min-w-0">
-                                                    <div>
-                                                        <span className="inline-block bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md mb-2">
-                                                            {v.code}
-                                                        </span>
-                                                        <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-normal line-clamp-2">
-                                                            {v.desc}
-                                                        </h4>
-                                                    </div>
-                                                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-200/30 dark:border-slate-800/40">
-                                                        <span className="text-[10px] text-slate-400 font-bold">{v.expiry}</span>
-                                                        <button 
-                                                            onClick={() => handleCopyCode(v.code, index)}
-                                                            className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-all duration-300 ${
-                                                                copiedIndex === index 
-                                                                    ? "bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400" 
-                                                                    : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-600/10"
-                                                            }`}
-                                                        >
-                                                            {copiedIndex === index ? "Đã chép" : "Sao chép"}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Tab 5: Security */}
                             {activeTab === "security" && (
                                 <div className="space-y-6">
@@ -662,82 +558,8 @@ export default function Profile() {
                                         </form>
                                     </div>
 
-                                    <hr className="border-slate-100 dark:border-slate-800 my-6" />
-
-                                    {/* Link accounts section */}
-                                    <div className="space-y-4">
-                                        <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400">Tài khoản liên kết</h4>
-                                        <div className="space-y-3 max-w-md">
-                                            <div className="flex items-center justify-between p-3 border border-slate-200/50 dark:border-slate-800/80 rounded-xl">
-                                                <div className="flex items-center gap-3">
-                                                    <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-                                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
-                                                    </svg>
-                                                    <div>
-                                                        <p className="text-xs font-bold">Google</p>
-                                                        <p className="text-[10px] text-slate-400">Đã kết nối</p>
-                                                    </div>
-                                                </div>
-                                                <button 
-                                                    onClick={() => setSocials({...socials, google: !socials.google})}
-                                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${
-                                                        socials.google 
-                                                            ? "border-red-200/50 hover:bg-red-500/5 text-red-500 dark:border-red-900/30" 
-                                                            : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
-                                                    }`}
-                                                >
-                                                    {socials.google ? "Hủy kết nối" : "Kết nối"}
-                                                </button>
-                                            </div>
-
-                                            <div className="flex items-center justify-between p-3 border border-slate-200/50 dark:border-slate-800/80 rounded-xl">
-                                                <div className="flex items-center gap-3">
-                                                    <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z" fill="#1877F2"/>
-                                                    </svg>
-                                                    <div>
-                                                        <p className="text-xs font-bold">Facebook</p>
-                                                        <p className="text-[10px] text-slate-400">{socials.facebook ? "Đã kết nối" : "Chưa kết nối"}</p>
-                                                    </div>
-                                                </div>
-                                                <button 
-                                                    onClick={() => setSocials({...socials, facebook: !socials.facebook})}
-                                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${
-                                                        socials.facebook 
-                                                            ? "border-red-200/50 hover:bg-red-500/5 text-red-500 dark:border-red-900/30" 
-                                                            : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
-                                                    }`}
-                                                >
-                                                    {socials.facebook ? "Hủy kết nối" : "Kết nối"}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <hr className="border-slate-100 dark:border-slate-800 my-6" />
-
-                                    {/* 2FA Option */}
-                                    <div className="flex items-center justify-between max-w-md p-3 border border-slate-200/50 dark:border-slate-800/80 rounded-xl bg-slate-50/20 dark:bg-slate-900/20">
-                                        <div className="space-y-0.5">
-                                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Xác thực 2 yếu tố (2FA)</h4>
-                                            <p className="text-[10px] text-slate-400">Yêu cầu mã xác thực gửi về điện thoại mỗi khi đăng nhập.</p>
-                                        </div>
-                                        <button 
-                                            onClick={() => setTwoFA(!twoFA)}
-                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                                twoFA ? "bg-emerald-600" : "bg-slate-200 dark:bg-slate-700"
-                                            }`}
-                                        >
-                                            <span 
-                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                                    twoFA ? "translate-x-5" : "translate-x-0"
-                                                }`}
-                                            />
-                                        </button>
-                                    </div>
+                              
+                                 
                                 </div>
                             )}
 

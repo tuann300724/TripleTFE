@@ -74,11 +74,21 @@ export default function Product() {
     const [activeCategory, setActiveCategory] = useState("Tất cả");
     /* FETCH API */
     useEffect(() => {
-        axios.get("https://localhost:7147/api/Products")
-            .then(res => {
-
-                const filtered = res.data.filter(p => p.status !== 3);
-                setProducts(filtered);
+        Promise.all([
+            axios.get("https://localhost:7147/api/Products"),
+            axios.get("https://localhost:7147/api/ProductVariants")
+        ])
+            .then(([productsRes, variantsRes]) => {
+                const variants = variantsRes.data;
+                const filtered = productsRes.data.filter(p => p.status !== 3);
+                // Tính tổng stock cho từng product
+                const productsWithStock = filtered.map(product => {
+                    const totalStock = variants
+                        .filter(v => v.productId === product.productId)
+                        .reduce((acc, v) => acc + v.stock, 0);
+                    return { ...product, stock: totalStock };
+                });
+                setProducts(productsWithStock);
             })
             .catch(err => console.log(err));
     }, []);
