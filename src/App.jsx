@@ -47,6 +47,7 @@ import AdminOrder from "./admin/Order";
 import AdminCategory from "./admin/Category";
 
 import AdminPayment from "./admin/Payment";
+import ProductEdit from "./admin/ProductEdit";
 
 
 
@@ -101,6 +102,7 @@ function App() {
                         <Route path="users" element={<User />} />
 
                         <Route path="products" element={<AdminProduct />} />
+                         <Route path="products/:id" element={<ProductEdit />} />
 
                         <Route path="products/new" element={<ProductCreate />} />
 
