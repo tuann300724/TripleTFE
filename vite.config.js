@@ -7,6 +7,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  optimizeDeps: {
+ 
+    include: ['recharts', 'lodash'],
+  },
+  
+  ssr: {
+    noExternal: ['recharts'],
+  },
   server: {
   proxy: {
     "/momo": {

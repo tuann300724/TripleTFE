@@ -158,7 +158,7 @@ export default function Checkout() {
                     orderId: order.orderId,
                     amount: total,
                     paymentMethod: paymentMethod === "momo" ? "MOMO" : "COD",
-                    paymentStatus: paymentMethod === "momo" ? "Waiting" : "Pending",
+                    paymentStatus: paymentMethod === "momo" ? "Waiting" : "Paid",
                 }
             );
 
