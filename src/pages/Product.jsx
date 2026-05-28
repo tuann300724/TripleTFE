@@ -7,15 +7,12 @@ function CustomProductCard({ product }) {
     const isOutOfStock = product.status === 2;
     return (
         <article className={`group tt-card-interactive flex h-full flex-col overflow-hidden ${isOutOfStock ? "opacity-60" : ""}`}>
-
             <div className="relative aspect-square shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-700/80">
-
                 <img
                     src={`${product.thumbnail}`}
                     alt={product.productName}
                     className="tt-img-zoom h-full w-full object-cover"
                 />
-
 
                 {isOutOfStock && (
                     <span className="absolute left-3 top-3 rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white shadow-md">
@@ -32,7 +29,6 @@ function CustomProductCard({ product }) {
             </div>
 
             <div className="flex flex-1 flex-col p-5">
-
                 <p className="tt-label text-xs">{product.categoryName}</p>
 
                 <h3 className="mt-1 line-clamp-2 min-h-14 text-lg font-semibold text-slate-900 dark:text-slate-100">
@@ -58,21 +54,22 @@ function CustomProductCard({ product }) {
                 >
                     Xem chi tiết
                 </Link>
-
             </div>
         </article>
     );
 }
 
 /* PAGE */
-
 export default function Product() {
-
     const [products, setProducts] = useState([]);
     const [search, setSearch] = useState("");
-    const [categories, setCategories] = useState([]);
     const [activeCategory, setActiveCategory] = useState("Tất cả");
-    /* FETCH API */
+
+    // --- PHÂN TRANG STATE ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10; // Giới hạn hiển thị 10 sản phẩm mỗi trang
+
+    /* FETCH API (Đã bỏ API Categories, gom cụm dữ liệu song song) */
     useEffect(() => {
         Promise.all([
             axios.get("https://localhost:7147/api/Products"),
@@ -81,6 +78,7 @@ export default function Product() {
             .then(([productsRes, variantsRes]) => {
                 const variants = variantsRes.data;
                 const filtered = productsRes.data.filter(p => p.status === 1);
+
                 // Tính tổng stock cho từng product
                 const productsWithStock = filtered.map(product => {
                     const totalStock = variants
@@ -92,15 +90,14 @@ export default function Product() {
             })
             .catch(err => console.log(err));
     }, []);
-    useEffect(() => {
-        axios.get("https://localhost:7147/api/Categories")
-            .then(res => {
-                setCategories(res.data);
-            })
-            .catch(err => console.log(err));
-    }, []);
-    const filtered = products.filter((p) => {
 
+    // --- TỰ ĐỘNG TRÍCH XUẤT DANH MỤC KHÔNG TRÙNG NHAU (FRONTEND ONLY) ---
+    const categories = Array.from(
+        new Set(products.map((p) => p.categoryName).filter(Boolean))
+    );
+
+    // --- LOGIC LỌC SẢN PHẨM ---
+    const filtered = products.filter((p) => {
         const matchCategory =
             activeCategory === "Tất cả" ||
             p.categoryName === activeCategory;
@@ -111,10 +108,27 @@ export default function Product() {
         return matchCategory && matchSearch;
     });
 
+    // --- XỬ LÝ CHIA DỮ LIỆU ĐỂ PHÂN TRANG ---
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+    // Mảng 10 sản phẩm thực tế sẽ render lên màn hình của trang hiện tại
+    const currentItems = filtered.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+
+    // Reset trang về 1 khi người dùng gõ tìm kiếm hoặc đổi danh mục
+    const handleCategoryChange = (categoryName) => {
+        setActiveCategory(categoryName);
+        setCurrentPage(1);
+    };
+
+    const handleSearchChange = (e) => {
+        setSearch(e.target.value);
+        setCurrentPage(1);
+    };
 
     return (
         <div>
-
             {/* HERO (GIỮ NGUYÊN) */}
             <section className="tt-hero">
                 <div className="mx-auto max-w-6xl">
@@ -130,33 +144,24 @@ export default function Product() {
                 </div>
             </section>
 
-            {/* FILTER (GIỮ NGUYÊN FORM CỦA BẠN) */}
+            {/* FILTER & GRID */}
             <section className="mx-auto max-w-6xl px-6 py-12 md:px-12">
-
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-
                     <div className="flex flex-wrap gap-2">
-
                         <button
-                            onClick={() => setActiveCategory("Tất cả")}
-                            className={`tt-chip ${activeCategory === "Tất cả"
-                                ? "tt-chip-active"
-                                : "tt-chip-inactive"
-                                }`}
+                            onClick={() => handleCategoryChange("Tất cả")}
+                            className={`tt-chip ${activeCategory === "Tất cả" ? "tt-chip-active" : "tt-chip-inactive"}`}
                         >
                             Tất cả
                         </button>
 
-                        {categories.map((cat) => (
+                        {categories.map((catName) => (
                             <button
-                                key={cat.categoryId}
-                                onClick={() => setActiveCategory(cat.categoryName)}
-                                className={`tt-chip ${activeCategory === cat.categoryName
-                                    ? "tt-chip-active"
-                                    : "tt-chip-inactive"
-                                    }`}
+                                key={catName}
+                                onClick={() => handleCategoryChange(catName)}
+                                className={`tt-chip ${activeCategory === catName ? "tt-chip-active" : "tt-chip-inactive"}`}
                             >
-                                {cat.categoryName}
+                                {catName}
                             </button>
                         ))}
                     </div>
@@ -165,19 +170,19 @@ export default function Product() {
                         type="search"
                         placeholder="Tìm sản phẩm..."
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={handleSearchChange}
                         className="tt-input lg:max-w-xs"
                     />
                 </div>
 
                 <p className="tt-muted mt-8 text-sm">
-                    Hiển thị {filtered.length} / {products.length} sản phẩm
+                    Hiển thị {filtered.length > 0 ? indexOfFirstItem + 1 : 0} - {indexOfLastItem > filtered.length ? filtered.length : indexOfLastItem} trong tổng số {filtered.length} sản phẩm tìm thấy
                 </p>
 
-                {/* GRID */}
-                {filtered.length > 0 ? (
-                    <div className={`mt-6 grid auto-rows-fr items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 `}>
-                        {filtered.map((p) => (
+                {/* GRID (Thay đổi render từ filtered thành currentItems) */}
+                {currentItems.length > 0 ? (
+                    <div className="mt-6 grid auto-rows-fr items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        {currentItems.map((p) => (
                             <CustomProductCard
                                 key={p.productId}
                                 product={p}
@@ -190,6 +195,45 @@ export default function Product() {
                         <p className="tt-body mt-4 text-lg">
                             Không tìm thấy sản phẩm phù hợp.
                         </p>
+                    </div>
+                )}
+
+                {/* --- THANH ĐIỀU HƯỚNG PHÂN TRANG --- */}
+                {filtered.length > itemsPerPage && (
+                    <div className="mt-12 flex items-center justify-center gap-2 border-t border-slate-100 pt-6 dark:border-slate-800">
+                        <button
+                            type="button"
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(prev => prev - 1)}
+                            className="inline-flex h-9 px-3 items-center justify-center rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        >
+                            Trước
+                        </button>
+
+                        <div className="flex items-center gap-1">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                <button
+                                    key={page}
+                                    type="button"
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold transition-all ${currentPage === page
+                                            ? "bg-emerald-600 text-white shadow-sm"
+                                            : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button
+                            type="button"
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            className="inline-flex h-9 px-3 items-center justify-center rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        >
+                            Sau
+                        </button>
                     </div>
                 )}
 
