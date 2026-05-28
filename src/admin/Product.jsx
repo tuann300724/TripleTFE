@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { Package, Plus, Loader2, Edit, Trash2, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { Package, Plus, Loader2, Edit, ChevronLeft, ChevronRight, ChevronDown, Filter } from "lucide-react";
 import AdminSidebar from "./components/AdminSidebar";
-
 
 export default function Product() {
     const columns = ["Hình ảnh", "Sản phẩm", "Thương hiệu / Danh mục", "Giá bán", "Trạng thái", "Thao tác"];
     
-    // --- STATE QUẢN LÝ DỮ LIỆU VÀ PHÂN TRANG ---
+    // --- STATE QUẢN LÝ DỮ LIỆU VÀ BỘ LỌC ---
     const [products, setProducts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     
+    const [selectedCategory, setSelectedCategory] = useState(""); // Lưu tên danh mục chọn lọc
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    // State quản lý xem dòng nào đang mở Dropdown đổi Trạng thái (Lưu productId)
+    // State quản lý dropdown trạng thái
     const [openStatusDropdownId, setOpenStatusDropdownId] = useState(null);
 
     // --- FETCH DATA TỪ API PRODUCTS ---
@@ -34,62 +34,57 @@ export default function Product() {
             });
     }, []);
 
-    // --- HÀM FORMAT TIỀN VÀ XỬ LÝ ĐƯỜNG DẪN ẢNH ---
+    // --- TỰ ĐỘNG LẤY DANH SÁCH DANH MỤC ĐỘC NHẤT TỪ PRODUCTS (FRONTEND ONLY) ---
+    // Hàm này lọc ra các `categoryName` không trùng nhau có trong mảng products hiện tại
+    const uniqueCategories = Array.from(
+        new Set(products.map((p) => p.categoryName).filter(Boolean))
+    );
+
+    // --- HÀM FORMAT TIỀN ---
     const formatPrice = (price) => {
         return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
     };
 
-    // --- XỬ LÝ LOGIC PHÂN TRANG (PAGINATION) ---
+    // --- LOGIC LỌC SẢN PHẨM PHÍA CLIENT (FRONTEND) ---
+    const filteredProducts = products.filter((product) => {
+        if (selectedCategory && product.categoryName !== selectedCategory) {
+            return false;
+        }
+        return true;
+    });
+
+    // --- XỬ LÝ LOGIC PHÂN TRANG ---
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = products.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(products.length / itemsPerPage);
+    const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
+    const handleCategoryFilterChange = (e) => {
+        setSelectedCategory(e.target.value);
+        setCurrentPage(1); // Reset về trang 1 khi lọc
+    };
+
+    // --- HÀM ĐỔI TRẠNG THÁI ---
     const handleStatusChange = async (productId, newStatus) => {
         try {
-            // Đóng dropdown sau khi chọn phân loại trạng thái
             setOpenStatusDropdownId(null);
-
-            // Gọi API đổi trạng thái bằng Query String (status=1 hoặc status=2) theo phương thức PUT
             const response = await fetch(
                 `https://localhost:7147/api/Products/change-status/${productId}?status=${newStatus}`,
                 {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
+                    headers: { "Content-Type": "application/json" }
                 }
             );
 
-            // Kiểm tra nếu API phản hồi lỗi (ví dụ: lỗi 400, 404, 500)
-            if (!response.ok) {
-                throw new Error("Cập nhật trạng thái lên hệ thống thất bại!");
-            }
+            if (!response.ok) throw new Error("Cập nhật trạng thái thất bại!");
 
-            // Nếu API chạy thành công (200 OK), cập nhật lại mảng dữ liệu trên giao diện UI
             setProducts(prevProducts =>
                 prevProducts.map(p =>
                     p.productId === productId ? { ...p, status: newStatus } : p
                 )
             );
-
         } catch (err) {
-            // Hiển thị thông báo nếu gặp sự cố kết nối hoặc lỗi nghiệp vụ từ API
             alert(err.message || "Gặp lỗi khi xử lý đổi trạng thái!");
-        }
-    };
-
-    // --- HÀM XỬ LÝ XÓA SẢN PHẨM ---
-    const handleDelete = async (productId) => {
-        if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
-            try {
-                const response = await fetch(`https://localhost:7147/api/Products/${productId}`, { method: "DELETE" });
-                if (!response.ok) throw new Error("Xóa sản phẩm thất bại!");
-                setProducts(products.filter(p => p.productId !== productId));
-                alert("Đã xóa sản phẩm thành công!");
-            } catch (err) {
-                alert(err.message);
-            }
         }
     };
 
@@ -97,7 +92,6 @@ export default function Product() {
         <div className="flex bg-slate-50 dark:bg-slate-900 min-h-screen">
             <AdminSidebar />
             <div className="flex-1 min-w-0">
-                
                 <div className="p-6">
                     
                     {/* Hero section */}
@@ -121,7 +115,30 @@ export default function Product() {
 
                     {/* Table Container */}
                     <div className="rounded-xl bg-white p-6 shadow dark:bg-slate-800">
-                        <h2 className="mb-4 text-lg font-bold text-slate-900 dark:text-white">Danh sách sản phẩm</h2>
+                        
+                        {/* Thanh bộ lọc dữ liệu */}
+                        <div className="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 dark:border-slate-700/60">
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Danh sách sản phẩm</h2>
+                            
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    <Filter className="h-3.5 w-3.5" /> Lọc:
+                                </div>
+                                <select
+                                    value={selectedCategory}
+                                    onChange={handleCategoryFilterChange}
+                                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                                >
+                                    <option value="">Tất cả danh mục</option>
+                                    {uniqueCategories.map((catName) => (
+                                        <option key={catName} value={catName}>
+                                            {catName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                                 <thead>
@@ -146,13 +163,11 @@ export default function Product() {
                                         <tr><td colSpan={columns.length} className="px-4 py-8 text-center text-rose-500 text-sm font-medium">Lỗi: {error}</td></tr>
                                     )}
 
-                                    {!isLoading && !error && products.length === 0 && (
-                                        <tr><td colSpan={columns.length} className="px-4 py-10 text-center text-slate-400 text-sm">Chưa có sản phẩm nào.</td></tr>
+                                    {!isLoading && !error && filteredProducts.length === 0 && (
+                                        <tr><td colSpan={columns.length} className="px-4 py-10 text-center text-slate-400 text-sm">Không tìm thấy sản phẩm nào phù hợp.</td></tr>
                                     )}
 
-                                    {/* MAP DỮ LIỆU PHÂN TRANG (10 sản phẩm mỗi trang) */}
                                     {!isLoading && !error && currentItems.map((product) => {
-                                        // Định dạng giá hiển thị khoảng giá Min - Max trực tiếp từ Backend trả về
                                         const priceRange = product.minPrice === product.maxPrice 
                                             ? formatPrice(product.minPrice)
                                             : `${formatPrice(product.minPrice)} - ${formatPrice(product.maxPrice)}`;
@@ -160,7 +175,6 @@ export default function Product() {
                                         return (
                                             <tr key={product.productId} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
                                                 
-                                                {/* Ảnh Thumbnail */}
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     <div className="h-12 w-12 overflow-hidden rounded-lg border border-slate-100 bg-slate-50 dark:border-slate-700">
                                                         <img 
@@ -172,14 +186,12 @@ export default function Product() {
                                                     </div>
                                                 </td>
 
-                                                {/* Tên sản phẩm */}
                                                 <td className="px-4 py-3 whitespace-nowrap font-medium text-slate-900 dark:text-white">
                                                     <div className="max-w-[240px] truncate" title={product.productName}>
                                                         {product.productName}
                                                     </div>
                                                 </td>
 
-                                                {/* Phân loại Brand & Category tên chữ từ Backend */}
                                                 <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                                                     <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300 mr-1.5">
                                                         {product.brandName}
@@ -189,12 +201,10 @@ export default function Product() {
                                                     </span>
                                                 </td>
 
-                                                {/* Khoảng Giá */}
                                                 <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-white">
                                                     {priceRange}
                                                 </td>
 
-                                                {/* CỘT TOGGLE ĐỔI TRẠNG THÁI (STATUS DROPDOWN) */}
                                                 <td className="px-4 py-3 whitespace-nowrap text-sm relative">
                                                     <button
                                                         type="button"
@@ -210,12 +220,10 @@ export default function Product() {
                                                         <ChevronDown className="h-3 w-3 opacity-60" />
                                                     </button>
 
-                                                    {/* Menu Dropdown đổ xuống khi click */}
                                                     {openStatusDropdownId === product.productId && (
                                                         <>
-                                                            {/* Lớp phủ vô hình để nhấn ra ngoài tự đóng menu */}
                                                             <div className="fixed inset-0 z-10" onClick={() => setOpenStatusDropdownId(null)}></div>
-                                                            <div className="absolute left-4 mt-1 w-32 rounded-lg bg-white shadow-xl border border-slate-100 py-1 z-20 dark:bg-slate-700 dark:border-slate-600 animate-[fadeUp_0.15s_ease-out]">
+                                                            <div className="absolute left-4 mt-1 w-32 rounded-lg bg-white shadow-xl border border-slate-100 py-1 z-20 dark:bg-slate-700 dark:border-slate-600">
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => handleStatusChange(product.productId, 1)}
@@ -235,13 +243,12 @@ export default function Product() {
                                                     )}
                                                 </td>
 
-                                                {/* Các nút sửa / xóa */}
+                                                {/* Thao tác (Chỉ giữ lại nút Edit, ĐÃ BỎ NÚT XÓA) */}
                                                 <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
                                                     <div className="flex items-center gap-2">
                                                         <a href={`/admin/products/${product.productId}`} className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition dark:bg-slate-700 dark:text-slate-300">
                                                             <Edit className="h-4 w-4" />
                                                         </a>
-                                                       
                                                     </div>
                                                 </td>
                                             </tr>
@@ -251,15 +258,15 @@ export default function Product() {
                             </table>
                         </div>
 
-                        {/* --- THANH ĐIỀU HƯỚNG PHÂN TRANG (PAGINATION BAR) --- */}
-                        {!isLoading && !error && products.length > itemsPerPage && (
+                        {/* Phân trang */}
+                        {!isLoading && !error && filteredProducts.length > itemsPerPage && (
                             <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-700">
                                 <p className="text-sm text-slate-500">
                                     Hiển thị <span className="font-semibold text-slate-700 dark:text-white">{indexOfFirstItem + 1}</span> đến{" "}
                                     <span className="font-semibold text-slate-700 dark:text-white">
-                                        {indexOfLastItem > products.length ? products.length : indexOfLastItem}
+                                        {indexOfLastItem > filteredProducts.length ? filteredProducts.length : indexOfLastItem}
                                     </span>{" "}
-                                    trong tổng số <span className="font-semibold text-slate-700 dark:text-white">{products.length}</span> sản phẩm
+                                    trong tổng số <span className="font-semibold text-slate-700 dark:text-white">{filteredProducts.length}</span> sản phẩm phù hợp
                                 </p>
                                 <div className="flex items-center gap-2">
                                     <button
@@ -271,7 +278,6 @@ export default function Product() {
                                         <ChevronLeft className="h-4 w-4" />
                                     </button>
                                     
-                                    {/* Hiển thị số trang hiện tại */}
                                     <span className="text-sm font-semibold text-slate-700 dark:text-white px-3 py-1 bg-slate-50 dark:bg-slate-700 rounded-md border border-slate-200 dark:border-slate-600">
                                         Trang {currentPage} / {totalPages}
                                     </span>
@@ -289,7 +295,6 @@ export default function Product() {
                         )}
 
                     </div>
-                    
                 </div>
             </div>
         </div>
