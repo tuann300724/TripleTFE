@@ -50,6 +50,9 @@ import AdminPayment from "./admin/Payment";
 import ProductEdit from "./admin/ProductEdit";
 import CategoryAdd from "./admin/CategoryAdd";
 import CategoryEdit from "./admin/CategoryEdit";
+import NewsAdmin from "./admin/NewsAdmin";
+import AddNews from "./admin/AddNews";
+import EditNews from "./admin/EditNews";
 
 
 
@@ -113,6 +116,9 @@ function App() {
                         <Route path="categories/edit/:id" element={<CategoryEdit />} />
 
                         <Route path="categories" element={<AdminCategory />} />
+                        <Route path="news" element={<NewsAdmin />} />
+                        <Route path="news/add" element={<AddNews />} />
+                        <Route path="news/edit/:id" element={<EditNews />} />
 
                         <Route path="payments" element={<AdminPayment />} />
 

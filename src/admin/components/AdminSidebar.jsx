@@ -4,6 +4,7 @@ import {
     CreditCard,
     FolderTree,
     LayoutDashboard,
+    Newspaper,
     Package,
     Users,
 } from "lucide-react";
@@ -14,6 +15,7 @@ const menu = [
     { to: "/admin/products", icon: Package, label: "Sản phẩm" },
     { to: "/admin/orders", icon: ClipboardList, label: "Đơn hàng" },
     { to: "/admin/categories", icon: FolderTree, label: "Danh mục" },
+    { to: "/admin/news", icon: Newspaper, label: "Tin tức" },
     { to: "/admin/payments", icon: CreditCard, label: "Thanh toán" },
 ];
 

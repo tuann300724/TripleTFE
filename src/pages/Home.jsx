@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
-
-import { newsArticles } from "../data/news";
 import ProductCard from "../components/ProductCard";
 import NewsCard from "../components/NewsCard";
 import axios from "axios";
 import { useEffect, useState } from "react";
+
 const features = [
     { icon: "🏸", title: "Chính hãng 100%", desc: "Vợt, giày, phụ kiện từ Yonex, Victor, Li-Ning" },
     { icon: "🚚", title: "Giao hàng nhanh", desc: "Miễn phí ship đơn từ 500.000đ toàn quốc" },
@@ -13,33 +12,55 @@ const features = [
 ];
 
 export default function Home() {
-
-    const latestNews = newsArticles.slice(0, 3);
     const [products, setProducts] = useState([]);
+    const [news, setNews] = useState([]); // Khai báo State để lưu danh sách tin tức
+
+    // Hàm định dạng ngày tháng (DD/MM/YYYY)
+    const formatDate = (dateString) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        return date.toLocaleDateString("vi-VN");
+    };
+
+    // Hàm cắt ngắn nội dung bài viết
+    const getExcerpt = (text, maxLength = 90) => {
+        if (!text) return "";
+        return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+    };
 
     useEffect(() => {
+        // Gộp chung API lấy Sản phẩm và Tin tức bằng Promise.all
         Promise.all([
             axios.get("https://localhost:7147/api/Products"),
-            axios.get("https://localhost:7147/api/ProductVariants")
+            axios.get("https://localhost:7147/api/ProductVariants"),
+            axios.get("https://localhost:7147/api/News") // Gọi thêm API News
         ])
-            .then(([productsRes, variantsRes]) => {
+            .then(([productsRes, variantsRes, newsRes]) => {
+                // 1. Xử lý logic sản phẩm
                 const variants = variantsRes.data;
-                const filtered = productsRes.data.filter(p => p.status === 1);
-                // Tính tổng stock cho từng product
-                const productsWithStock = filtered.map(product => {
+                const filteredProducts = productsRes.data.filter(p => p.status === 1);
+                
+                const productsWithStock = filteredProducts.map(product => {
                     const totalStock = variants
                         .filter(v => v.productId === product.productId)
                         .reduce((acc, v) => acc + v.stock, 0);
                     return { ...product, stock: totalStock };
                 });
-                const featuredProducts = productsWithStock.slice(0, 4);
-                setProducts(featuredProducts);
+                
+                setProducts(productsWithStock.slice(0, 4));
+
+                // 2. Xử lý logic tin tức (Lấy 3 bài viết mới nhất)
+                const sortedNews = newsRes.data.sort(
+                    (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
+                );
+                setNews(sortedNews.slice(0, 3)); // Chỉ lấy tối đa 3 bài viết hiển thị ở trang chủ
             })
-            .catch(err => console.log(err));
+            .catch(err => console.log("Lỗi tải dữ liệu trang chủ:", err));
     }, []);
-    console.log('pro', products);
+
     return (
         <div>
+            {/* HERO SECTION */}
             <section className="tt-hero relative overflow-hidden">
                 <div className="absolute inset-0 opacity-20">
                     <div className="absolute -right-20 top-10 h-96 w-96 rounded-full bg-emerald-500 blur-3xl" />
@@ -51,7 +72,7 @@ export default function Home() {
                             Mùa giải mới — Giảm đến 30%
                         </span>
                         <h1 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">
-                            Chinh phục
+                            Chinh phục{" "}
                             <span className="block bg-gradient-to-r from-emerald-400 to-lime-300 bg-clip-text text-transparent">
                                 mọi cú smash
                             </span>
@@ -85,6 +106,7 @@ export default function Home() {
                 </div>
             </section>
 
+            {/* FEATURES SECTION */}
             <section className="mx-auto max-w-6xl px-6 py-16 md:px-12">
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                     {features.map((f) => (
@@ -101,6 +123,7 @@ export default function Home() {
                 </div>
             </section>
 
+            {/* FEATURED PRODUCTS SECTION */}
             <section className="tt-section-alt py-16">
                 <div className="mx-auto max-w-6xl px-6 md:px-12">
                     <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
@@ -120,6 +143,7 @@ export default function Home() {
                 </div>
             </section>
 
+            {/* NEWSLETTER SECTION */}
             <section className="mx-auto max-w-6xl px-6 py-16 md:px-12">
                 <div className="group overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 to-emerald-800 p-10 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/20 md:p-14">
                     <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
@@ -127,10 +151,7 @@ export default function Home() {
                             <h2 className="text-3xl font-bold">Đăng ký nhận ưu đãi 10%</h2>
                             <p className="mt-2 text-emerald-100">Cho đơn hàng đầu tiên và cập nhật tin khuyến mãi hàng tuần.</p>
                         </div>
-                        <form
-                            className="flex w-full max-w-md flex-col gap-3 sm:flex-row"
-                            onSubmit={(e) => e.preventDefault()}
-                        >
+                        <form className="flex w-full max-w-md flex-col gap-3 sm:flex-row" onSubmit={(e) => e.preventDefault()}>
                             <input
                                 type="email"
                                 placeholder="Email của bạn"
@@ -144,6 +165,7 @@ export default function Home() {
                 </div>
             </section>
 
+            {/* LATEST NEWS SECTION */}
             <section className="mx-auto max-w-6xl px-6 pb-20 md:px-12">
                 <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
                     <div>
@@ -154,11 +176,34 @@ export default function Home() {
                         Xem tất cả →
                     </Link>
                 </div>
-                <div className="mt-10 grid gap-8 md:grid-cols-3">
-                    {latestNews.map((article) => (
-                        <NewsCard key={article.id} article={article} />
-                    ))}
-                </div>
+
+                {/* Đổ data bài viết ở đây */}
+                {news.length === 0 ? (
+                    <div className="text-center text-slate-400 py-10 mt-6">
+                        Chưa có bài viết mới.
+                    </div>
+                ) : (
+                    <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                        {news.map((article) => (
+                            <Link 
+                                to={`/news/${article.newsId}`} 
+                                key={article.newsId} 
+                                className="block transition-transform hover:-translate-y-1"
+                            >
+                                <NewsCard 
+                                    article={{
+                                        id: article.newsId,
+                                        title: article.title,
+                                        excerpt: getExcerpt(article.content, 90),
+                                        image: article.thumbnail || "https://via.placeholder.com/400x250",
+                                        date: formatDate(article.createdDate),
+                                        category: "Tin tức"
+                                    }} 
+                                />
+                            </Link>
+                        ))}
+                    </div>
+                )}
             </section>
         </div>
     );

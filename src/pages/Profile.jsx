@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"; // Đã thêm useRef vào đây
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { formatPrice } from "../data/products";
+
 
 export default function Profile() {
     const [activeTab, setActiveTab] = useState("info");
