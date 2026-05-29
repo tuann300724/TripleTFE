@@ -80,7 +80,7 @@ export default function Product() {
         ])
             .then(([productsRes, variantsRes]) => {
                 const variants = variantsRes.data;
-                const filtered = productsRes.data.filter(p => p.status !== 3);
+                const filtered = productsRes.data.filter(p => p.status === 1);
                 // Tính tổng stock cho từng product
                 const productsWithStock = filtered.map(product => {
                     const totalStock = variants
