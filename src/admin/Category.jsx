@@ -1,17 +1,83 @@
 import { FolderTree } from "lucide-react";
 import AdminSidebar from "./components/AdminSidebar";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-
-const message = "Chức năng quản lý danh mục sẽ được phát triển trong tương lai.";
-
+// Hàm hỗ trợ tạo slug đơn giản từ tên danh mục
+const convertToSlug = (text) => {
+    return text
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\w\s-]/g, "")        // Xóa ký tự đặc biệt
+        .replace(/\s+/g, "-")            // Thay khoảng trắng bằng dấu -
+        .trim();
+};
 
 export default function Category() {
-    const columns = ["Tên danh mục", "Slug", "Số SP", "Thao tác"];
+    // Đổi tiêu đề cột thành cụ thể để tương thích trực quan hơn
+    const columns = ["Tên danh mục", "Slug", "Thao tác"];
+
+    // 1. Khởi tạo state lưu trữ danh sách danh mục và trạng thái tải dữ liệu
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
+
+    // 2. Hàm gọi API lấy dữ liệu (được tách ra để gọi lại sau khi xóa thành công)
+    const fetchCategories = async () => {
+        try {
+            const response = await fetch("https://localhost:7147/api/Categories");
+            if (!response.ok) {
+                throw new Error("Không thể lấy dữ liệu từ server");
+            }
+            const data = await response.json();
+            setCategories(data);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    // 3. Hàm xử lý XÓA danh mục kèm bắt lỗi logic ràng buộc sản phẩm
+    const handleDelete = async (cat) => {
+        // Cảnh báo xác nhận trước khi xóa tránh người dùng bấm nhầm
+        const confirmDelete = window.confirm(`Bạn có chắc chắn muốn xóa danh mục "${cat.categoryName}" không?`);
+        if (!confirmDelete) return;
+
+        try {
+            const response = await fetch(`https://localhost:7147/api/Categories/${cat.categoryId}`, {
+                method: "DELETE",
+            });
+
+            // Nếu server trả về lỗi hệ thống hoặc chặn xóa do ràng buộc dữ liệu (DB Constraint)
+            if (!response.ok) {
+                // Kiểm tra nếu status code là 400 hoặc 409 (thường gặp khi dính khoá ngoại)
+                if (response.status === 400 || response.status === 409) {
+                    throw new Error("Danh mục này hiện đang có sản phẩm (Product) bên trong nên không thể xóa!");
+                }
+                throw new Error("Danh mục này hiện đang có sản phẩm (Product) bên trong nên không thể xóa!");
+            }
+
+            // Xóa thành công
+            alert("Xóa danh mục thành công!");
+            fetchCategories(); 
+
+        } catch (err) {
+            // Hiển thị thông báo lỗi thân thiện được bắt ở trên
+            alert(err.message);
+        }
+    };
+
     return (
         <div className="flex">
             <AdminSidebar />
             <div className="flex-1">
-           
                 <div className="p-6">
                     {/* Hero section */}
                     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -26,26 +92,15 @@ export default function Category() {
                             </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            <button className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-white">Lọc</button>
-                            <button className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700">Thêm</button>
+                            <button
+                                onClick={() => navigate("/admin/categories/add")}
+                                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
+                            >
+                                Thêm danh mục
+                            </button>
                         </div>
                     </div>
-                    {/* Search/filter */}
-                    <div className="rounded-xl bg-white p-4 shadow dark:bg-slate-800 mb-6">
-                        <div className="flex flex-col gap-3 md:flex-row">
-                            <input
-                                type="search"
-                                placeholder="Tìm danh mục..."
-                                className="flex-1 rounded-xl border border-slate-200/80 bg-white/80 px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 dark:border-slate-600 dark:bg-slate-800/80 dark:text-white"
-                            />
-                            <select className="rounded-xl border border-slate-200/80 bg-white/80 px-4 py-2.5 text-sm outline-none dark:border-slate-600 dark:bg-slate-800/80 dark:text-white md:w-44" defaultValue="">
-                                <option value="">Tất cả trạng thái</option>
-                            </select>
-                            <select className="rounded-xl border border-slate-200/80 bg-white/80 px-4 py-2.5 text-sm outline-none dark:border-slate-600 dark:bg-slate-800/80 dark:text-white md:w-44" defaultValue="">
-                                <option value="">Sắp xếp</option>
-                            </select>
-                        </div>
-                    </div>
+
                     {/* Table */}
                     <div className="rounded-xl bg-white p-4 shadow dark:bg-slate-800">
                         <h2 className="mb-4 text-lg font-bold text-slate-900 dark:text-white">Danh sách danh mục</h2>
@@ -58,16 +113,55 @@ export default function Category() {
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td colSpan={columns.length} className="px-4 py-6 text-center text-slate-500 dark:text-slate-400">{message}</td>
-                                    </tr>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                                    {loading ? (
+                                        <tr>
+                                            <td colSpan={columns.length} className="px-4 py-6 text-center text-slate-500 dark:text-slate-400">Đang tải dữ liệu...</td>
+                                        </tr>
+                                    ) : error ? (
+                                        <tr>
+                                            <td colSpan={columns.length} className="px-4 py-6 text-center text-red-500 font-medium">{error}</td>
+                                        </tr>
+                                    ) : categories.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={columns.length} className="px-4 py-6 text-center text-slate-500 dark:text-slate-400">Không có danh mục nào.</td>
+                                        </tr>
+                                    ) : (
+                                        categories.map((cat) => (
+                                            <tr key={cat.categoryId} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                                                <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">
+                                                    <div>
+                                                        <p>{cat.categoryName}</p>
+                                                        {cat.description && <p className="text-xs text-slate-400 font-normal mt-0.5">{cat.description}</p>}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400 font-mono text-xs">
+                                                    {convertToSlug(cat.categoryName)}
+                                                </td>
+
+                                                <td className="px-4 py-3 text-sm">
+                                                    <div className="flex gap-2">
+                                                        {/* Bấm sửa */}
+                                                        <button 
+                                                            onClick={() => navigate(`/admin/categories/edit/${cat.categoryId}`)} 
+                                                            className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200"
+                                                        >
+                                                            Sửa
+                                                        </button>
+                                                        {/* Bấm xóa - Truyền nguyên object 'cat' vào để lấy cả Name và ID hiển thị cảnh báo */}
+                                                        <button 
+                                                            onClick={() => handleDelete(cat)} 
+                                                            className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/80"
+                                                        >
+                                                            Xóa
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
-                        </div>
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600">Sửa</button>
-                            <button className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 hover:bg-red-200 dark:bg-red-700 dark:text-white dark:hover:bg-red-600">Xóa</button>
                         </div>
                     </div>
                 </div>

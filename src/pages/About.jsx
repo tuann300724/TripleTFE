@@ -16,7 +16,7 @@ const team = [
     {
         name: "Trần Thanh Tuấn",
         role: "Chuyên gia thiết kế & phát triển sản phẩm",
-        image: "https://scontent.fsgn2-11.fna.fbcdn.net/v/t39.30808-6/427899823_1536380330480140_7374225531222713096_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=UsQ8qm_i7UgQ7kNvwFyN2Ce&_nc_oc=AdovEiDDZ4TxBkw-oBUaT5UnADbPlaS82Q0pjVfRPwWmbLkUV4DHjMKf9TKC_NZ-7Ts&_nc_zt=23&_nc_ht=scontent.fsgn2-11.fna&_nc_gid=D4_9-s58F6AmvARBEL9i7w&_nc_ss=7b2a8&oh=00_Af5hIA6hnCwDPceglORYy-zqQQcgoha4W7w4szTs6X33Zw&oe=6A12EF50",
+        image: "Images/3.jpg",
     },
     {
         name: "Nguyễn Hữu Toàn",

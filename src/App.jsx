@@ -48,6 +48,8 @@ import AdminCategory from "./admin/Category";
 
 import AdminPayment from "./admin/Payment";
 import ProductEdit from "./admin/ProductEdit";
+import CategoryAdd from "./admin/CategoryAdd";
+import CategoryEdit from "./admin/CategoryEdit";
 
 
 
@@ -107,6 +109,8 @@ function App() {
                         <Route path="products/new" element={<ProductCreate />} />
 
                         <Route path="orders" element={<AdminOrder />} />
+                        <Route path="categories/add" element={<CategoryAdd />} />
+                        <Route path="categories/edit/:id" element={<CategoryEdit />} />
 
                         <Route path="categories" element={<AdminCategory />} />
 
