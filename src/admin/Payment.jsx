@@ -29,7 +29,14 @@ export default function Payment() {
                 return res.json();
             })
             .then((data) => {
-                setPayments(data);
+
+                const sortedPayments = data.sort((a, b) => {
+
+                    return new Date(b.paymentDate || b.createdDate) - new Date(a.paymentDate || a.createdDate);
+
+                });
+
+                setPayments(sortedPayments);
                 setIsLoading(false);
             })
             .catch((err) => {
@@ -218,13 +225,12 @@ export default function Payment() {
                                             <td className="px-4 py-3.5 whitespace-nowrap text-sm font-bold text-slate-900 dark:text-white">{formatCurrency(p.amount)}</td>
                                             <td className="px-4 py-3.5 whitespace-nowrap text-sm text-slate-500">{formatDate(p.paymentDate)}</td>
                                             <td className="px-4 py-3.5 whitespace-nowrap text-sm">
-                                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold border ${
-                                                    p.paymentStatus === "Paid"
-                                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                        : p.paymentStatus === "Unpaid" || p.paymentStatus === "Pending"
+                                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold border ${p.paymentStatus === "Paid"
+                                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                    : p.paymentStatus === "Unpaid" || p.paymentStatus === "Pending"
                                                         ? "bg-amber-50 text-amber-700 border-amber-200"
                                                         : "bg-rose-50 text-rose-700 border-rose-200"
-                                                }`}>
+                                                    }`}>
                                                     {p.paymentStatus === "Paid" ? "Success" : (p.paymentStatus === "Unpaid" || p.paymentStatus === "Pending" ? "Waiting" : "Failed")}
                                                 </span>
                                             </td>
@@ -266,8 +272,8 @@ export default function Payment() {
                                             key={index + 1}
                                             onClick={() => setCurrentPage(index + 1)}
                                             className={`h-9 w-9 text-sm font-semibold rounded-lg transition ${currentPage === index + 1
-                                                    ? "bg-emerald-600 text-white"
-                                                    : "border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50"
+                                                ? "bg-emerald-600 text-white"
+                                                : "border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 hover:bg-slate-50"
                                                 }`}
                                         >
                                             {index + 1}
@@ -327,13 +333,12 @@ export default function Payment() {
                                         </div>
                                         <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                                             <span><strong>Trạng thái đơn:</strong></span>
-                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold border ${
-                                                selectedOrder.orderStatus === "Completed" || selectedOrder.orderStatus === "Success"
-                                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                    : selectedOrder.orderStatus === "Pending" || selectedOrder.orderStatus === "Waiting"
+                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold border ${selectedOrder.orderStatus === "Completed" || selectedOrder.orderStatus === "Success"
+                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                : selectedOrder.orderStatus === "Pending" || selectedOrder.orderStatus === "Waiting"
                                                     ? "bg-amber-50 text-amber-700 border-amber-200"
                                                     : "bg-rose-50 text-rose-700 border-rose-200"
-                                            }`}>
+                                                }`}>
                                                 {selectedOrder.orderStatus === "Completed" || selectedOrder.orderStatus === "Success" ? "Success" : (selectedOrder.orderStatus === "Pending" || selectedOrder.orderStatus === "Waiting" ? "Waiting" : selectedOrder.orderStatus)}
                                             </span>
                                         </div>

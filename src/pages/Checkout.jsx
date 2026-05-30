@@ -33,7 +33,7 @@ export default function Checkout() {
 
             setReceiverName(u.fullName || "");
             setReceiverPhone(u.phone || "");
-            setReceiverEmail(u.email || "");
+            setReceiverEmail(u.user.email || "");
             setShippingAddress(u.address || "");
         };
 
@@ -345,7 +345,7 @@ export default function Checkout() {
                                         onChange={(e) => setShippingAddress(e.target.value)}
                                         placeholder="Số nhà, tên đường..."
                                         className="tt-input"
-                                        />
+                                    />
                                 </div>
 
                             </form>
@@ -487,7 +487,7 @@ export default function Checkout() {
                                     <span>Phí giao hàng</span>
 
                                     <span className="font-semibold text-slate-800 dark:text-slate-200">
-                                       Miễn phí
+                                        Miễn phí
                                     </span>
 
                                 </div>
@@ -504,7 +504,7 @@ export default function Checkout() {
                                     {formatPrice(total)}
                                 </span>
 
-                                </div>
+                            </div>
 
                             <button
                                 type="button"

@@ -163,9 +163,14 @@ export default function Profile() {
     const ordersPerPage = 4; // Giới hạn hiển thị 4 đơn hàng trên mỗi trang
 
     useEffect(() => {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || !user.userId) {
+            setUserLoaded(true);
+            return;
+        }
         if (activeTab !== "orders") return;
 
-        fetch('https://localhost:7147/api/Orders/user/6')
+        fetch(`https://localhost:7147/api/Orders/user/${user.userId}`)
             .then((res) => {
                 if (!res.ok) throw new Error('Không thể tải dữ liệu lịch sử đơn hàng.');
                 return res.json();
@@ -198,15 +203,45 @@ export default function Profile() {
     const totalPages = Math.ceil(orders.length / ordersPerPage);
     // Hàm trả về Class CSS và Tên hiển thị tương ứng với trạng thái đơn hàng
     const getStatusDetails = (status) => {
+        // Chuyển về chữ thường để so sánh chính xác nhất
         switch (status?.toLowerCase()) {
             case 'pending':
-                return { name: 'Chờ xử lý', className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse', dotClass: 'bg-amber-500' };
+                return {
+                    name: 'Chờ xử lý',
+                    className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse',
+                    dotClass: 'bg-amber-500'
+                };
+            case 'Processing':
+                return {
+                    name: 'Chờ xử lý',
+                    className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse',
+                    dotClass: 'bg-amber-500'
+                };
             case 'shipping':
-                return { name: 'Đang giao hàng', className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 animate-pulse', dotClass: 'bg-blue-500' };
-            case 'delivered':
-                return { name: 'Đã giao hàng', className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20', dotClass: 'bg-emerald-500' };
+                return {
+                    name: 'Đang giao hàng',
+                    className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 animate-pulse',
+                    dotClass: 'bg-blue-500'
+                };
+            // SỬA TẠI ĐÂY: Chuyển 'Completed' thành 'completed'
+            case 'completed':
+                return {
+                    name: 'Đã hoàn thành', // Hoặc 'Đã giao hàng' tùy bạn muốn hiển thị
+                    className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+                    dotClass: 'bg-emerald-500'
+                };
+            case 'cancelled': // Thêm case này nếu API của bạn có trả về trạng thái hủy cụ thể
+                return {
+                    name: 'Đã hủy',
+                    className: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+                    dotClass: 'bg-rose-500'
+                };
             default:
-                return { name: status || 'Hủy đơn', className: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20', dotClass: 'bg-rose-500' };
+                return {
+                    name: status || 'Không xác định',
+                    className: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20',
+                    dotClass: 'bg-slate-500'
+                };
         }
     };
 
@@ -272,7 +307,13 @@ export default function Profile() {
         new: false,
         confirm: false
     });
-
+    const formatPrice = (price) => {
+        if (price === undefined || price === null) return "0 đ";
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(price);
+    };
     // Hàm helper để đảo ngược trạng thái ẩn/hiện của một ô cụ thể
     const toggleShowPassword = (field) => {
         setShowPassword((prev) => ({
@@ -602,11 +643,7 @@ export default function Profile() {
                                                                     <span className="text-xs text-slate-400 mr-2">Tổng tiền:</span>
                                                                     <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400">{formatPrice(order.totalAmount)}</span>
                                                                 </div>
-                                                                <div className="flex gap-2">
-                                                                    <button className="px-3.5 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                                                        Theo dõi đơn đặt
-                                                                    </button>
-                                                                </div>
+
                                                             </div>
                                                         </div>
                                                     </div>
@@ -647,102 +684,101 @@ export default function Profile() {
                                     )}
                                 </div>
                             )}
-           {activeTab === "security" && (
-    <div className="space-y-6">
-        <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Bảo mật tài khoản</h3>
-            <p className="text-xs text-slate-400 mt-1">Đổi mật khẩu bảo vệ và liên kết các mạng xã hội để tăng bảo mật.</p>
-        </div>
+                            {activeTab === "security" && (
+                                <div className="space-y-6">
+                                    <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Bảo mật tài khoản</h3>
+                                        <p className="text-xs text-slate-400 mt-1">Đổi mật khẩu bảo vệ và liên kết các mạng xã hội để tăng bảo mật.</p>
+                                    </div>
 
-        {/* Change password section */}
-        <div className="space-y-4">
-            <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400">Cập nhật mật khẩu</h4>
+                                    {/* Change password section */}
+                                    <div className="space-y-4">
+                                        <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400">Cập nhật mật khẩu</h4>
 
-            {pwdMessage.text && (
-                <div className={`p-4 rounded-xl text-xs font-semibold border ${
-                    pwdMessage.type === "success"
-                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                        : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
-                }`}>
-                    {pwdMessage.text}
-                </div>
-            )}
+                                        {pwdMessage.text && (
+                                            <div className={`p-4 rounded-xl text-xs font-semibold border ${pwdMessage.type === "success"
+                                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                                : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
+                                                }`}>
+                                                {pwdMessage.text}
+                                            </div>
+                                        )}
 
-            <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
-                
-                {/* 1. MẬT KHẨU HIỆN TẠI */}
-                <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Mật khẩu hiện tại</label>
-                    <div className="relative flex items-center">
-                        <input
-                            type={showPassword.old ? "text" : "password"}
-                            required
-                            value={pwdData.oldPassword}
-                            onChange={(e) => setPwdData({ ...pwdData, oldPassword: e.target.value })}
-                            className="tt-input w-full pr-10" // pr-10 để chừa khoảng trống bên phải không bị đè chữ lên icon
-                            placeholder="••••••••"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => toggleShowPassword('old')}
-                            className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm focus:outline-none select-none"
-                        >
-                            {showPassword.old ? "👁️" : "🙈"}
-                        </button>
-                    </div>
-                </div>
-                
-                {/* 2. MẬT KHẨU MỚI */}
-                <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Mật khẩu mới</label>
-                    <div className="relative flex items-center">
-                        <input
-                            type={showPassword.new ? "text" : "password"}
-                            required
-                            value={pwdData.newPassword}
-                            onChange={(e) => setPwdData({ ...pwdData, newPassword: e.target.value })}
-                            className="tt-input w-full pr-10"
-                            placeholder="••••••••"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => toggleShowPassword('new')}
-                            className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm focus:outline-none select-none"
-                        >
-                            {showPassword.new ? "👁️" : "🙈"}
-                        </button>
-                    </div>
-                </div>
-                
-                {/* 3. XÁC NHẬN MẬT KHẨU MỚI */}
-                <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Xác nhận mật khẩu mới</label>
-                    <div className="relative flex items-center">
-                        <input
-                            type={showPassword.confirm ? "text" : "password"}
-                            required
-                            value={pwdData.confirmPassword}
-                            onChange={(e) => setPwdData({ ...pwdData, confirmPassword: e.target.value })}
-                            className="tt-input w-full pr-10"
-                            placeholder="••••••••"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => toggleShowPassword('confirm')}
-                            className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm focus:outline-none select-none"
-                        >
-                            {showPassword.confirm ? "👁️" : "🙈"}
-                        </button>
-                    </div>
-                </div>
-                
-                <button type="submit" className="tt-btn-dark px-5 py-2.5 text-xs font-semibold active:scale-95 transition-transform">
-                    Cập nhật mật khẩu
-                </button>
-            </form>
-        </div>
-    </div>
-)}
+                                        <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+
+                                            {/* 1. MẬT KHẨU HIỆN TẠI */}
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Mật khẩu hiện tại</label>
+                                                <div className="relative flex items-center">
+                                                    <input
+                                                        type={showPassword.old ? "text" : "password"}
+                                                        required
+                                                        value={pwdData.oldPassword}
+                                                        onChange={(e) => setPwdData({ ...pwdData, oldPassword: e.target.value })}
+                                                        className="tt-input w-full pr-10" // pr-10 để chừa khoảng trống bên phải không bị đè chữ lên icon
+                                                        placeholder="••••••••"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleShowPassword('old')}
+                                                        className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm focus:outline-none select-none"
+                                                    >
+                                                        {showPassword.old ? "👁️" : "🙈"}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* 2. MẬT KHẨU MỚI */}
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Mật khẩu mới</label>
+                                                <div className="relative flex items-center">
+                                                    <input
+                                                        type={showPassword.new ? "text" : "password"}
+                                                        required
+                                                        value={pwdData.newPassword}
+                                                        onChange={(e) => setPwdData({ ...pwdData, newPassword: e.target.value })}
+                                                        className="tt-input w-full pr-10"
+                                                        placeholder="••••••••"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleShowPassword('new')}
+                                                        className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm focus:outline-none select-none"
+                                                    >
+                                                        {showPassword.new ? "👁️" : "🙈"}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* 3. XÁC NHẬN MẬT KHẨU MỚI */}
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Xác nhận mật khẩu mới</label>
+                                                <div className="relative flex items-center">
+                                                    <input
+                                                        type={showPassword.confirm ? "text" : "password"}
+                                                        required
+                                                        value={pwdData.confirmPassword}
+                                                        onChange={(e) => setPwdData({ ...pwdData, confirmPassword: e.target.value })}
+                                                        className="tt-input w-full pr-10"
+                                                        placeholder="••••••••"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleShowPassword('confirm')}
+                                                        className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm focus:outline-none select-none"
+                                                    >
+                                                        {showPassword.confirm ? "👁️" : "🙈"}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <button type="submit" className="tt-btn-dark px-5 py-2.5 text-xs font-semibold active:scale-95 transition-transform">
+                                                Cập nhật mật khẩu
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
 
                         </div>
                     </div>

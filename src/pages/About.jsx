@@ -11,7 +11,7 @@ const team = [
     {
         name: "Nguyễn Anh Tuấn",
         role: "Founder & HLV",
-        image: "https://imgs.search.brave.com/6ZOp9hNDVkGCOqORt8f0iszcN-JYnWiZaKFztSixbrQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9wbmdm/cmUuY29tL3dwLWNv/bnRlbnQvdXBsb2Fk/cy8xMDAwMTE4MTkx/LTEtMzAweDMwMC5w/bmc",
+        image: "Images/image.png",
     },
     {
         name: "Trần Thanh Tuấn",

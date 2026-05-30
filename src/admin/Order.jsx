@@ -26,11 +26,18 @@ export default function Order() {
     useEffect(() => {
         fetch("https://localhost:7147/api/Orders")
             .then((res) => {
-                if (!res.ok) throw new Error("Không thể tải danh sách đơn hàng!");
+                if (!res.ok) throw new Error("Không thể lấy danh sách đơn hàng!");
                 return res.json();
             })
             .then((data) => {
-                setOrders(data);
+
+                const sortedOrders = data.sort((a, b) => {
+
+                    return new Date(b.orderDate || b.createdDate) - new Date(a.orderDate || a.createdDate);
+
+                });
+
+                setOrders(sortedOrders);
                 setIsLoading(false);
             })
             .catch((err) => {
@@ -198,10 +205,10 @@ export default function Order() {
                                                     value={order.orderStatus}
                                                     onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
                                                     className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold border outline-none cursor-pointer font-sans shadow-sm transition duration-150 focus:ring-2 focus:ring-offset-1 ${order.orderStatus === "Completed"
-                                                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 focus:ring-emerald-500"
-                                                            : order.orderStatus === "Pending"
-                                                                ? "bg-amber-50 text-amber-700 border-amber-200 focus:ring-amber-500"
-                                                                : "bg-rose-50 text-rose-700 border-rose-200 focus:ring-rose-500"
+                                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 focus:ring-emerald-500"
+                                                        : order.orderStatus === "Pending"
+                                                            ? "bg-amber-50 text-amber-700 border-amber-200 focus:ring-amber-500"
+                                                            : "bg-rose-50 text-rose-700 border-rose-200 focus:ring-rose-500"
                                                         }`}
                                                 >
                                                     <option value="Pending" className="bg-white text-amber-700 font-semibold">Pending</option>
