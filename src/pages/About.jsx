@@ -26,9 +26,9 @@ const team = [
 ];
 
 const contactItems = [
-    { icon: "📍", title: "Địa chỉ", value: "123 Đường Cầu Giấy, Hà Nội" },
-    { icon: "📞", title: "Hotline", value: "0901 234 567" },
-    { icon: "✉️", title: "Email", value: "contact@triplet.vn" },
+    { icon: "📍", title: "Địa chỉ", value: "Biên Hoà, Đồng Nai" },
+    { icon: "📞", title: "Hotline", value: "0352 164 808" },
+    { icon: "✉️", title: "Email", value: "Tuantran652003@triplet.vn" },
 ];
 
 export default function About() {

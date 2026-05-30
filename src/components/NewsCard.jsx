@@ -17,7 +17,7 @@ export default function NewsCard({ article, featured = false }) {
                     <h2 className="mt-3 text-2xl font-bold text-white transition-colors duration-300 group-hover:text-emerald-300 md:text-3xl">
                         {article.title}
                     </h2>
-                    <p className="mt-2 line-clamp-2 max-w-2xl text-slate-300">{article.excerpt}</p>
+                    {/* <p className="mt-2 line-clamp-2 max-w-2xl text-slate-300">{article.excerpt}</p> */}
                     <div className="mt-4 flex items-center justify-between">
                         <span className="text-sm text-slate-400">{article.date}</span>
                         <Link to="/news" className="tt-link text-sm">

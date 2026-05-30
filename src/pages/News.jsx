@@ -79,20 +79,20 @@ export default function News() {
                         {/* Bài viết nổi bật (Featured Card) */}
                         {featured && (
                             <div className="mt-10">
-                                <div 
-                                    onClick={() => navigate(`/news/${featured.newsId}`)} 
+                                <div
+                                    onClick={() => navigate(`/news/${featured.newsId}`)}
                                     className="block cursor-pointer transition-transform hover:-translate-y-1"
                                 >
-                                    <NewsCard 
+                                    <NewsCard
                                         article={{
                                             id: featured.newsId,
                                             title: featured.title,
-                                            excerpt: getExcerpt(featured.content, 180), // Cắt ngắn đoạn trích cho bài lớn
+                                            // excerpt: getExcerpt(featured.content, 180), // Cắt ngắn đoạn trích cho bài lớn
                                             image: featured.thumbnail || "https://via.placeholder.com/800x400", // Thêm ảnh fallback nếu trống
                                             date: formatDate(featured.createdDate), // Định dạng ngày lại cho đẹp
                                             category: "Tin tức"
-                                        }} 
-                                        featured 
+                                        }}
+                                        featured
                                     />
                                 </div>
                             </div>
@@ -101,20 +101,20 @@ export default function News() {
                         {/* Danh sách các bài viết còn lại (Grid Cards) */}
                         <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                             {rest.map((article) => (
-                                <div 
-                                    onClick={() => navigate(`/news/${article.newsId}`)} 
-                                    key={article.newsId} 
+                                <div
+                                    onClick={() => navigate(`/news/${article.newsId}`)}
+                                    key={article.newsId}
                                     className="block cursor-pointer transition-transform hover:-translate-y-1"
                                 >
-                                    <NewsCard 
+                                    <NewsCard
                                         article={{
                                             id: article.newsId,
                                             title: article.title,
-                                            excerpt: getExcerpt(article.content, 90), // Đoạn trích ngắn hơn cho bài nhỏ
+                                            // excerpt: getExcerpt(article.content, 90), // Đoạn trích ngắn hơn cho bài nhỏ
                                             image: article.thumbnail || "https://via.placeholder.com/400x250",
                                             date: formatDate(article.createdDate),
                                             category: "Tin tức"
-                                        }} 
+                                        }}
                                     />
                                 </div>
                             ))}

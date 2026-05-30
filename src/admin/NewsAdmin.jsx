@@ -1,6 +1,6 @@
-import { Newspaper } from "lucide-react"; 
+import { Newspaper } from "lucide-react";
 
- 
+
 import AdminSidebar from "./components/AdminSidebar";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -23,7 +23,7 @@ export default function NewsAdmin() {
         if (!htmlString) return "";
         // Loại bỏ các thẻ HTML như <p>, <img>, <strong>...
         const plainText = htmlString.replace(/<\/?[^>]+(>|$)/g, " ");
-        
+
         if (plainText.length <= maxLength) return plainText;
         return plainText.substring(0, maxLength).trim() + "...";
     };
@@ -43,7 +43,7 @@ export default function NewsAdmin() {
             setLoading(false);
         }
     };
-
+    console.log("Fetched news:", newsList);
     useEffect(() => {
         fetchNews();
     }, []);

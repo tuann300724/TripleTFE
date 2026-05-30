@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Trash2 } from "lucide-react";
 
 export default function Cart() {
     const navigate = useNavigate();
@@ -258,8 +259,9 @@ export default function Cart() {
                                                         onClick={() =>
                                                             removeItem(item.cartItemId)
                                                         }
-                                                        className="text-xs text-red-500"
+                                                        className="w-fit mt-1.5 flex items-center gap-1.5 rounded-md bg-red-50 dark:bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 transition-colors hover:bg-red-100 dark:hover:bg-red-500/20"
                                                     >
+                                                        <Trash2 size={14} />
                                                         Xóa sản phẩm
                                                     </button>
                                                 </div>

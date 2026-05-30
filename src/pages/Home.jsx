@@ -39,14 +39,14 @@ export default function Home() {
                 // 1. Xử lý logic sản phẩm
                 const variants = variantsRes.data;
                 const filteredProducts = productsRes.data.filter(p => p.status === 1);
-                
+
                 const productsWithStock = filteredProducts.map(product => {
                     const totalStock = variants
                         .filter(v => v.productId === product.productId)
                         .reduce((acc, v) => acc + v.stock, 0);
                     return { ...product, stock: totalStock };
                 });
-                
+
                 setProducts(productsWithStock.slice(0, 4));
 
                 // 2. Xử lý logic tin tức (Lấy 3 bài viết mới nhất)
@@ -185,20 +185,20 @@ export default function Home() {
                 ) : (
                     <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                         {news.map((article) => (
-                            <Link 
-                                to={`/news/${article.newsId}`} 
-                                key={article.newsId} 
+                            <Link
+                                to={`/news/${article.newsId}`}
+                                key={article.newsId}
                                 className="block transition-transform hover:-translate-y-1"
                             >
-                                <NewsCard 
+                                <NewsCard
                                     article={{
                                         id: article.newsId,
                                         title: article.title,
-                                        excerpt: getExcerpt(article.content, 90),
+                                        // excerpt: getExcerpt(article.content, 90),
                                         image: article.thumbnail || "https://via.placeholder.com/400x250",
                                         date: formatDate(article.createdDate),
                                         category: "Tin tức"
-                                    }} 
+                                    }}
                                 />
                             </Link>
                         ))}
