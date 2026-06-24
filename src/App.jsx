@@ -32,7 +32,8 @@ import Checkout from "./pages/Checkout";
 
 import Success from "./pages/Success";
 
-import Profile from "./pages/Profile";
+import Profile from "./pages/profile/Profile";
+import CourtBooking from "./pages/CourtBooking";
 
 import Dashboard from "./admin/Dashboard";
 
@@ -53,6 +54,9 @@ import CategoryEdit from "./admin/CategoryEdit";
 import NewsAdmin from "./admin/NewsAdmin";
 import AddNews from "./admin/AddNews";
 import EditNews from "./admin/EditNews";
+import AdminCourt from "./admin/Court";
+import CourtDetail from "./admin/CourtDetail";
+import CourtEdit from "./admin/CourtEdit";
 
 
 
@@ -90,6 +94,8 @@ function App() {
 
                         <Route path="profile" element={<Profile />} />
 
+                        <Route path="booking" element={<CourtBooking />} />
+
                         <Route path="/login" element={<Login />} />
 
                         <Route path="/register" element={<Register />} />
@@ -121,6 +127,9 @@ function App() {
                         <Route path="news/edit/:id" element={<EditNews />} />
 
                         <Route path="payments" element={<AdminPayment />} />
+                        <Route path="courts" element={<AdminCourt />} />
+                        <Route path="courts/edit/:id" element={<CourtEdit />} />
+                        <Route path="courts/:id" element={<CourtDetail />} />
 
                     </Route>
 

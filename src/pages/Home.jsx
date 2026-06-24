@@ -143,6 +143,83 @@ export default function Home() {
                 </div>
             </section>
 
+            {/* COURT BOOKING RECOMMENDATION SECTION */}
+            <section className="mx-auto max-w-6xl px-6 py-16 md:px-12">
+                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+                    <div>
+                        <span className="tt-label">Dịch vụ đặc biệt</span>
+                        <h2 className="tt-title mt-1">Đề xuất đặt sân cầu lông</h2>
+                    </div>
+                    <Link to="/booking" className="tt-link">
+                        Xem chi tiết lịch sân →
+                    </Link>
+                </div>
+
+                <div className="mt-10 grid gap-8 lg:grid-cols-12 items-center">
+                    {/* Visual Banner */}
+                    <div className="lg:col-span-7 relative group overflow-hidden rounded-3xl shadow-xl ring-4 ring-emerald-500/10 hover:ring-emerald-500/30 transition-all duration-500">
+                        <img 
+                            src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=1200&auto=format&fit=crop" 
+                            alt="Sân cầu lông chất lượng cao" 
+                            className="w-full h-[400px] object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent flex flex-col justify-end p-8 text-white">
+                            <span className="text-emerald-400 font-semibold text-xs tracking-widest uppercase mb-2">Trải nghiệm dịch vụ</span>
+                            <h3 className="text-3xl font-extrabold tracking-tight">Hệ Thống Sân Tiêu Chuẩn Quốc Tế</h3>
+                            <p className="text-slate-300 mt-3 text-sm max-w-lg leading-relaxed">
+                                Triple T Badminton cung cấp hệ thống sân bãi chuyên nghiệp với thảm PVC chống trơn trượt, giảm chấn tối đa bảo vệ xương khớp, hệ thống đèn chiếu sáng đạt tiêu chuẩn không gây lóa mắt.
+                            </p>
+                            <div className="mt-6 flex flex-wrap gap-4">
+                                <Link to="/booking" className="tt-btn-primary px-6 py-3 text-sm shadow-lg shadow-emerald-500/20">
+                                    Đến trang đặt sân
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Features and Court Types */}
+                    <div className="lg:col-span-5 flex flex-col gap-6">
+                        <div className="tt-card-interactive p-6 flex gap-4 items-start">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 text-2xl">
+                                🏆
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-lg text-slate-900 dark:text-white">Sân VIP - Thảm Cao Su</h4>
+                                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">Giá: 150.000đ/giờ</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                                    Dành cho các trận đấu đòi hỏi chất lượng đỉnh cao, thảm êm giảm chấn thương đầu gối hiệu quả.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="tt-card-interactive p-6 flex gap-4 items-start">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 text-2xl">
+                                ⚡
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-lg text-slate-900 dark:text-white">Sân Tiêu Chuẩn - Thảm PVC</h4>
+                                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">Giá: 100.000đ/giờ</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                                    Phù hợp tập luyện, giao lưu phong trào với mức giá cực kỳ tối ưu và chất lượng thảm đạt chuẩn.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="tt-card-interactive p-6 flex gap-4 items-start">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 text-2xl">
+                                📅
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-lg text-slate-900 dark:text-white">Lịch đặt linh hoạt</h4>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                                    Hệ thống đặt lịch trực tuyến hiển thị trực quan các khung giờ trống giúp bạn nhanh chóng chọn sân ưng ý.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* NEWSLETTER SECTION */}
             <section className="mx-auto max-w-6xl px-6 py-16 md:px-12">
                 <div className="group overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 to-emerald-800 p-10 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/20 md:p-14">

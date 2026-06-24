@@ -7,6 +7,7 @@ import {
     Newspaper,
     Package,
     Users,
+    Tent,
 } from "lucide-react";
 
 const menu = [
@@ -17,6 +18,7 @@ const menu = [
     { to: "/admin/categories", icon: FolderTree, label: "Danh mục" },
     { to: "/admin/news", icon: Newspaper, label: "Tin tức" },
     { to: "/admin/payments", icon: CreditCard, label: "Thanh toán" },
+    { to: "/admin/courts", icon: Tent, label: "Quản lý sân" },
 ];
 
 export default function AdminSidebar() {

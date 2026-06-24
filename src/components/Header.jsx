@@ -91,10 +91,10 @@ export default function Header() {
                     </span>
                 </Link>
 
-                {/* Menu */}
                 <nav className="hidden items-center gap-8 md:flex">
                     <NavLink to="/" end className={navLinkClass}>Trang chủ</NavLink>
                     <NavLink to="/product" className={navLinkClass}>Sản phẩm</NavLink>
+                    <NavLink to="/booking" className={navLinkClass}>Đặt sân</NavLink>
                     <NavLink to="/about" className={navLinkClass}>Giới thiệu</NavLink>
                     <NavLink to="/news" className={navLinkClass}>Tin tức</NavLink>
                 </nav>
@@ -169,9 +169,10 @@ export default function Header() {
             </div>
 
             {/* Mobile Menu */}
-            <nav className="flex justify-center gap-6 border-t border-slate-200 py-3 dark:border-slate-700/50 md:hidden">
+            <nav className="flex justify-center gap-6 border-t border-slate-200 py-3 dark:border-slate-700/50 md:hidden flex-wrap">
                 <NavLink to="/" end className={navLinkClass}>Trang chủ</NavLink>
                 <NavLink to="/product" className={navLinkClass}>Sản phẩm</NavLink>
+                <NavLink to="/booking" className={navLinkClass}>Đặt sân</NavLink>
                 <NavLink to="/about" className={navLinkClass}>Giới thiệu</NavLink>
                 <NavLink to="/news" className={navLinkClass}>Tin tức</NavLink>
             </nav>

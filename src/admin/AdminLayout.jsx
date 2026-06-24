@@ -10,11 +10,19 @@ const titles = {
     "/admin/orders": "Quản lý đơn hàng",
     "/admin/categories": "Quản lý danh mục",
     "/admin/payments": "Quản lý thanh toán",
+    "/admin/courts": "Quản lý sân cầu lông",
 };
+
+function getAdminTitle(pathname) {
+    if (titles[pathname]) return titles[pathname];
+    if (pathname.startsWith("/admin/courts/edit/")) return "Chỉnh sửa yêu cầu sân";
+    if (pathname.match(/^\/admin\/courts\/\d+$/)) return "Chi tiết sân cầu lông";
+    return "Admin";
+}
 
 export default function AdminLayout() {
     const { pathname } = useLocation();
-    const title = titles[pathname] ?? "Admin";
+    const title = getAdminTitle(pathname);
 
     return (
         <div className="min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
