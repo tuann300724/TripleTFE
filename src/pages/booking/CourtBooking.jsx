@@ -119,9 +119,9 @@ export default function CourtBooking() {
         filteredBranches.forEach(branch => {
             const customIcon = window.L.divIcon({
                 html: `<div class="flex items-center justify-center">
-                         <div class="w-8 h-8 rounded-full bg-rose-500/25 flex items-center justify-center border border-rose-500/40 relative">
-                           <div class="w-4.5 h-4.5 rounded-full bg-rose-600 shadow-md"></div>
-                           <div class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-35"></div>
+                         <div class="w-8 h-8 rounded-full bg-blue-500/25 flex items-center justify-center border border-rose-500/40 relative">
+                           <div class="w-4.5 h-4.5 rounded-full bg-blue-600 shadow-md"></div>
+                           <div class="absolute inset-0 rounded-full bg-blue-500 animate-ping opacity-35"></div>
                          </div>
                        </div>`,
                 className: "custom-div-icon",
