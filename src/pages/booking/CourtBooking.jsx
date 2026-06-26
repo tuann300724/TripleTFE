@@ -136,31 +136,15 @@ const timeSlots = Array.from({ length: 33 }, (_, i) => {
     return `${h}:${m}`;
 });
 
-// Giả lập dữ liệu các khung giờ đã được đặt trước cho toàn bộ các sân
+// Giả lập dữ liệu các khung giờ đã được đặt trước
 const mockedBookedSlots = {
     1: ["07:00", "07:30", "08:00"],
     2: ["12:00", "12:30", "16:00"],
     3: ["18:00", "18:30", "19:00", "19:30", "20:00", "20:30"],
-    4: ["06:00", "06:30"],
-    5: ["08:00", "08:30", "09:00"],
-    6: ["14:00", "14:30"],
-    7: ["19:00", "19:30", "20:00"],
-    8: ["07:00", "07:30"],
-    9: ["12:00", "12:30"],
-    10: ["17:00", "17:30", "18:00"],
-    11: ["20:00", "20:30"],
-    12: ["09:00", "09:30"],
-    13: ["15:00", "15:30"],
-    14: ["18:00", "18:30"],
-    15: ["06:00", "06:30"],
-    16: ["11:00", "11:30"],
-    17: ["16:00", "16:30"],
-    18: ["19:00", "19:30"],
-    19: ["08:00", "08:30"],
-    20: ["13:00", "13:30"],
-    21: ["17:00", "17:30"]
+    4: ["06:00", "06:30"]
 };
 
+// Chuẩn hóa giờ để so sánh dễ dàng (thêm số 0 ở đầu nếu cần)
 const normalizeTime = (t) => {
     const [h, m] = t.split(":");
     return `${h.padStart(2, '0')}:${m}`;
@@ -169,169 +153,20 @@ const normalizeTime = (t) => {
 const normalizedTimeSlots = timeSlots.map(normalizeTime);
 
 export default function CourtBooking() {
-    const navigate = useNavigate();
-    const [selectedBranch, setSelectedBranch] = useState(branchesData[2]); // Chọn mặc định Tân Hiệp như trong ảnh mẫu ( Quận 7 / Sân Tân Hiệp)
-    const [activeCourts, setActiveCourts] = useState([]);
     const [isGridModalOpen, setIsGridModalOpen] = useState(false);
-    const [selectedDate, setSelectedDate] = useState(() => {
-        const today = new Date();
-        return today.toISOString().split('T')[0];
-    });
-
+    const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [selectedCells, setSelectedCells] = useState([]);
-    
-    // QR code scan simulation states
-    const [scanning, setScanning] = useState(false);
-    const [scannedBranchName, setScannedBranchName] = useState("");
 
-    // Live search and region filtering states
-    const [searchQuery, setSearchQuery] = useState("");
-    const [regionFilter, setRegionFilter] = useState("all");
-
-    const mapRef = useRef(null);
-    const markersRef = useRef([]);
-
-    // Lọc chi nhánh sân dựa trên từ khóa tìm kiếm và bộ lọc vùng miền
-    const filteredBranches = branchesData.filter(branch => {
-        const matchesSearch = branch.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                              branch.address.toLowerCase().includes(searchQuery.toLowerCase());
-        
-        const matchesRegion = regionFilter === "all" || 
-                              (regionFilter === "tphcm" && branch.address.includes("TP.HCM")) ||
-                              (regionFilter === "dong-nai" && branch.address.includes("Đồng Nai")) ||
-                              (regionFilter === "binh-phuoc" && branch.address.includes("Bình Phước"));
-
-        return matchesSearch && matchesRegion;
-    });
-
-    // Hàm khởi tạo bản đồ Leaflet
-    const initializeMap = () => {
-        if (!window.L || mapRef.current) return;
-
-        // Tâm bản đồ đặt gần khu vực Trị An / Biên Hòa để bao quát được cả Bình Phước & Đồng Nai
-        const map = window.L.map("map", {
-            center: [11.35, 106.9],
-            zoom: 9,
-            zoomControl: true
-        });
-        mapRef.current = map;
-
-        // Thêm Layer bản đồ
-        window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-    };
-
-    // Effect khởi chạy bản đồ Leaflet (kèm cơ chế phòng vệ nạp trễ)
-    useEffect(() => {
-        let interval;
-        const checkAndInit = () => {
-            if (window.L) {
-                initializeMap();
-            } else {
-                interval = setInterval(() => {
-                    if (window.L) {
-                        clearInterval(interval);
-                        initializeMap();
-                    }
-                }, 100);
-            }
-        };
-
-        checkAndInit();
-
-        return () => {
-            if (interval) clearInterval(interval);
-            if (mapRef.current) {
-                mapRef.current.remove();
-                mapRef.current = null;
-            }
-        };
-    }, []);
-
-    // Effect cập nhật markers khi danh sách chi nhánh được lọc thay đổi
-    useEffect(() => {
-        if (!window.L || !mapRef.current) return;
-
-        // Xóa các marker cũ
-        markersRef.current.forEach(marker => marker.remove());
-        markersRef.current = [];
-
-        // Tạo marker cho mỗi chi nhánh trong danh sách đã lọc
-        filteredBranches.forEach(branch => {
-            const customIcon = window.L.divIcon({
-                html: `<div class="flex items-center justify-center">
-                         <div class="w-8 h-8 rounded-full bg-rose-500/25 flex items-center justify-center border border-rose-500/40 relative">
-                           <div class="w-4.5 h-4.5 rounded-full bg-rose-600 shadow-md"></div>
-                           <div class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-35"></div>
-                         </div>
-                       </div>`,
-                className: "custom-div-icon",
-                iconSize: [32, 32],
-                iconAnchor: [16, 16]
-            });
-
-            const marker = window.L.marker(branch.coords, { icon: customIcon })
-                .addTo(mapRef.current)
-                .on("click", () => {
-                    setSelectedBranch(branch);
-                });
-
-            marker.bindTooltip(`<b>${branch.name}</b>`, {
-                direction: "top",
-                offset: [0, -10],
-                className: "bg-slate-900 text-white border-0 shadow-lg font-medium text-xs px-2.5 py-1 rounded-md"
-            });
-
-            markersRef.current.push(marker);
-        });
-    }, [filteredBranches]);
-
-    // Effect tự động pan/flyTo đến chi nhánh khi selectedBranch thay đổi
-    useEffect(() => {
-        if (selectedBranch && mapRef.current) {
-            mapRef.current.flyTo(selectedBranch.coords, 12, {
-                animate: true,
-                duration: 1.5
-            });
-        }
-    }, [selectedBranch]);
-
-    // Giả lập quét mã QR
-    const handleSimulateQR = (branch) => {
-        setScanning(true);
-        setScannedBranchName(branch.name);
-
-        setTimeout(() => {
-            setScanning(false);
-            setSelectedBranch(branch);
-        }, 1200); // 1.2s delay tạo hiệu ứng quét
-    };
-
-    // Điều hướng đến trang chi tiết của sân rồi mới đặt lịch
-    const handleOpenGridForBranch = (branch) => {
-        navigate(`/booking/${branch.id}`);
-    };
-
-    // Mở Google Maps
-    const handleOpenInGoogleMaps = () => {
-        if (!selectedBranch) return;
-        const [lat, lng] = selectedBranch.coords;
-        window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, "_blank");
+    const handleOpenGrid = () => {
+        setIsGridModalOpen(true);
     };
 
     // Chọn ô giờ đặt sân
     const handleCellClick = (courtId, time) => {
-        const isBooked = mockedBookedSlots[courtId]?.includes(time);
-        if (isBooked) return;
-
+        if (mockedBookedSlots[courtId]?.includes(time)) return;
         setSelectedCells((prev) => {
             const exists = prev.find(cell => cell.courtId === courtId && cell.time === time);
-            if (exists) {
-                return prev.filter(cell => !(cell.courtId === courtId && cell.time === time));
-            } else {
-                return [...prev, { courtId, time }];
-            }
+            return exists ? prev.filter(cell => !(cell.courtId === courtId && cell.time === time)) : [...prev, { courtId, time }];
         });
     };
 
@@ -339,419 +174,182 @@ export default function CourtBooking() {
     const calculateTotal = () => {
         let totalMoney = 0;
         selectedCells.forEach(cell => {
-            const court = activeCourts.find(c => c.id === cell.courtId);
+            const court = courtsInfo.find(c => c.id === cell.courtId);
             if (court) totalMoney += court.pricePerSlot;
         });
         const totalMinutes = selectedCells.length * 30;
-        const hours = Math.floor(totalMinutes / 60);
-        const mins = totalMinutes % 60;
-        const timeString = hours > 0 ? `${hours}h${mins > 0 ? mins : ''}` : `${mins} phút`;
-        
-        return { totalMoney, timeString };
+        return { totalMoney, timeString: `${Math.floor(totalMinutes / 60)}h${totalMinutes % 60 > 0 ? totalMinutes % 60 : ''}` };
     };
 
     const { totalMoney, timeString } = calculateTotal();
 
-    // Xác nhận đặt sân thành công
     const handleConfirmBooking = () => {
         if (selectedCells.length === 0) return;
-        alert(`Đã đặt thành công ${selectedCells.length} khung giờ tại ${selectedBranch.name} vào ngày ${selectedDate}.\nTổng tiền: ${totalMoney.toLocaleString('vi-VN')}đ`);
+        alert(`Đã đặt thành công ${selectedCells.length} khung giờ vào ngày ${selectedDate}.\nTổng tiền: ${totalMoney.toLocaleString('vi-VN')}đ`);
         setSelectedCells([]);
         setIsGridModalOpen(false);
     };
 
     return (
-        <div className="min-h-screen py-10 px-4 md:px-8 bg-slate-50 dark:bg-[#0c1219]">
-            {/* CSS Tùy biến để bản đồ Leaflet chuyển màu tối & bỏ viền xấu */}
-            <style>{`
-                @keyframes scan {
-                    0% { top: 0%; }
-                    50% { top: 100%; }
-                    100% { top: 0%; }
-                }
-                .dark-map .leaflet-tile {
-                    filter: invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%) !important;
-                }
-                .leaflet-container {
-                    background: #0d1527 !important;
-                }
-                .custom-div-icon {
-                    background: none !important;
-                    border: none !important;
-                }
-                .leaflet-bar {
-                    border: 1px solid rgba(255,255,255,0.1) !important;
-                    background: #0f172a !important;
-                    border-radius: 8px !important;
-                    overflow: hidden;
-                }
-                .leaflet-bar a {
-                    background: #0f172a !important;
-                    color: #94a3b8 !important;
-                    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
-                }
-                .leaflet-bar a:hover {
-                    background: #1e293b !important;
-                    color: #fff !important;
-                }
-            `}</style>
-
-            {/* KHUNG TOÀN CỤC CHỨA HEADER & BODY MAP */}
-            <div className="max-w-6xl mx-auto flex flex-col rounded-2xl overflow-hidden border border-slate-800 bg-[#0c111c] shadow-2xl">
-                
-                {/* THANH HEADER TIÊU ĐỀ & TÌM KIẾM (Y CHANG ẢNH MẪU) */}
-                <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-6 py-4 bg-[#0d1424] border-b border-slate-800 shrink-0">
-                    {/* Logo & Tên thương hiệu */}
-                    <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-lg bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-md shadow-emerald-500/20">
-                            🏸
-                        </div>
-                        <span className="font-extrabold text-[#00f5a0] tracking-wider text-sm md:text-base">
-                            COURTMAP BOOKING
+        <div className="min-h-screen">
+            {/* HERO SECTION */}
+            <section className="tt-hero relative overflow-hidden">
+                <div className="absolute inset-0 opacity-20">
+                    <div className="absolute -right-20 top-10 h-96 w-96 rounded-full bg-emerald-500 blur-3xl" />
+                    <div className="absolute -left-20 bottom-10 h-72 w-72 rounded-full bg-lime-400 blur-3xl" />
+                </div>
+                <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-8 px-6 py-16 text-center">
+                    <span className="inline-block rounded-full border border-emerald-500/50 bg-emerald-500/10 px-4 py-1.5 text-sm font-medium text-emerald-400">
+                        Hệ thống đặt lịch trực quan
+                    </span>
+                    <h1 className="text-4xl font-extrabold leading-tight tracking-tight md:text-5xl lg:text-6xl">
+                        Hệ thống sân cầu lông <br />
+                        <span className="bg-gradient-to-r from-emerald-400 to-lime-300 bg-clip-text text-transparent">
+                            Tiêu Chuẩn Quốc Tế
                         </span>
-                    </div>
+                    </h1>
+                    <p className="max-w-2xl text-lg text-slate-300">
+                        Trải nghiệm không gian thể thao đẳng cấp với giao diện đặt lịch dễ nhìn, chọn khung giờ nhanh chóng và thuận tiện nhất.
+                    </p>
+                    <button 
+                        onClick={handleOpenGrid}
+                        className="mt-4 inline-flex items-center justify-center rounded-xl bg-emerald-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-1 hover:bg-emerald-400 hover:shadow-emerald-500/50"
+                    >
+                        📅 Mở bảng đặt lịch ngay
+                    </button>
+                </div>
+            </section>
 
-                    {/* Bộ lọc Tìm kiếm & Chọn Vùng miền */}
-                    <div className="flex items-center gap-2 flex-1 md:justify-end">
-                        <div className="relative w-full max-w-sm">
-                            <input 
-                                type="text"
-                                placeholder="Tìm kiếm sân gần bạn hoặc nhập địa chỉ..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-[#070b13] border border-slate-700/50 rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-emerald-500 transition-colors"
-                            />
-                            <Search size={14} className="absolute left-2.5 top-2.5 text-slate-500" />
-                        </div>
-                        <select
-                            value={regionFilter}
-                            onChange={(e) => setRegionFilter(e.target.value)}
-                            className="bg-[#070b13] border border-slate-700/50 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none focus:border-emerald-500 cursor-pointer transition-colors"
-                        >
-                            <option value="all">Toàn quốc</option>
-                            <option value="tphcm">TP. Hồ Chí Minh</option>
-                            <option value="dong-nai">Đồng Nai</option>
-                            <option value="binh-phuoc">Bình Phước</option>
-                        </select>
-                    </div>
-                </header>
-
-                {/* BẢN ĐỒ & SIDEBAR CHIA ĐÔI BỐ CỤC (SIDEBAR TRÁI, MAP PHẢI) */}
-                <div className="flex flex-col lg:flex-row h-[580px] w-full relative overflow-hidden">
-                    
-                    {/* HIỆU ỨNG QUÉT MÃ QR GIẢ LẬP (PHỦ KHU VỰC BẢN ĐỒ & SIDEBAR) */}
-                    {scanning && (
-                        <div className="absolute inset-0 z-40 bg-slate-950/95 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-200">
-                            <div className="relative w-36 h-36 border-2 border-emerald-500/50 rounded-2xl flex items-center justify-center mb-6 overflow-hidden bg-slate-900">
-                                <QrCode size={72} className="text-emerald-400" />
-                                <div 
-                                    className="absolute left-0 right-0 h-0.5 bg-emerald-400 shadow-[0_0_12px_#34d399]" 
-                                    style={{ animation: "scan 1.5s infinite ease-in-out" }}
+            {/* DANH SÁCH SÂN */}
+            <section className="mx-auto max-w-6xl px-6 py-16 md:px-12">
+                <div className="mb-10 text-center">
+                    <span className="tt-label">Danh sách</span>
+                    <h2 className="tt-title mt-2">Thông tin các sân hiện có</h2>
+                </div>
+                
+                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
+                    {courtsInfo.map(court => (
+                        <div key={court.id} className="tt-card flex flex-col md:flex-row overflow-hidden group">
+                            <div className="md:w-2/5 h-48 md:h-auto relative overflow-hidden">
+                                <img 
+                                    src={court.image} 
+                                    alt={court.name} 
+                                    className="tt-img-zoom h-full w-full object-cover"
                                 />
                             </div>
-                            <h3 className="text-emerald-400 font-bold tracking-wider uppercase text-sm animate-pulse flex items-center gap-1.5 justify-center">
-                                <Sparkles size={16} className="animate-spin text-emerald-400" />
-                                Đang xử lý quét mã QR...
-                            </h3>
-                            <p className="text-slate-400 text-xs mt-3 font-semibold px-4 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/50 max-w-[80%] truncate">
-                                {scannedBranchName}
-                            </p>
-                        </div>
-                    )}
-
-                    {/* BÊN TRÁI: DANH SÁCH CHI NHÁNH KẾT QUẢ TÌM KIẾM */}
-                    <aside className="w-full lg:w-[32%] h-[300px] lg:h-full flex flex-col bg-[#0b1322] border-r border-slate-800 shrink-0">
-                        {/* Tiêu đề Kết quả */}
-                        <div className="p-3.5 border-b border-slate-800 shrink-0">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
-                                KẾT QUẢ TÌM THẤY ({filteredBranches.length})
-                            </span>
-                        </div>
-
-                        {/* Danh sách thẻ Card cuộn dọc */}
-                        <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
-                            {filteredBranches.length === 0 ? (
-                                <div className="text-center py-10 text-slate-500 text-xs font-semibold">
-                                    Không tìm thấy sân phù hợp.
-                                </div>
-                            ) : (
-                                filteredBranches.map(branch => {
-                                    const isSelected = selectedBranch?.id === branch.id;
-                                    return (
-                                        <div 
-                                            key={branch.id}
-                                            onClick={() => setSelectedBranch(branch)}
-                                            className={`p-3.5 rounded-xl cursor-pointer transition-all duration-300 flex flex-col ${
-                                                isSelected 
-                                                ? "bg-slate-900 border border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]" 
-                                                : "bg-[#0f172a] border border-slate-800/70 hover:border-slate-700 hover:bg-slate-900/60"
-                                            }`}
-                                        >
-                                            {/* Tiêu đề & Rating */}
-                                            <div className="flex justify-between items-start gap-2 mb-1.5">
-                                                <h3 className="font-bold text-xs text-white leading-tight">{branch.name}</h3>
-                                                <div className="flex items-center gap-0.5 text-[10px] text-amber-400 font-bold shrink-0">
-                                                    <span>★</span>
-                                                    <span>{branch.rating}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Địa chỉ cụ thể */}
-                                            <p className="text-slate-400 text-[10px] leading-relaxed mb-3 flex items-start gap-1">
-                                                <MapPin size={11} className="text-rose-400 shrink-0 mt-0.5" />
-                                                <span className="line-clamp-2">{branch.address}</span>
-                                            </p>
-
-                                            {/* Footer thẻ: Sân trống & nút đặt lịch nhanh */}
-                                            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-800/40">
-                                                <span className="text-[9px] text-[#00f5a0] font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                                                    Có {branch.freeCourts} sân trống
-                                                </span>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleOpenGridForBranch(branch);
-                                                    }}
-                                                    className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[9px] py-1.5 px-2.5 rounded-lg transition-all active:scale-[0.97] cursor-pointer"
-                                                >
-                                                    <span>Đặt Sân Ngay</span>
-                                                    <span>→</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
-
-                        {/* PHẦN GIẢ LẬP QUÉT QR Ở DƯỚI CÙNG SIDEBAR */}
-                        <div className="p-3 bg-[#080d1a] border-t border-slate-800 shrink-0">
-                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-2">
-                                Giả lập quét mã QR nhanh:
-                            </span>
-                            <div className="grid grid-cols-2 gap-1.5">
-                                {branchesData.map(branch => (
-                                    <button
-                                        key={branch.id}
-                                        onClick={() => handleSimulateQR(branch)}
-                                        className="flex items-center gap-1.5 border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/15 text-emerald-300 font-semibold py-1.5 px-2 rounded-lg transition-all text-[9px] text-left hover:border-emerald-400 truncate active:scale-[0.98] cursor-pointer"
-                                    >
-                                        <QrCode size={11} className="text-emerald-400 shrink-0" />
-                                        <span className="truncate">{branch.name.replace("Sân Cầu Lông Premium - ", "").replace("CLB Cầu Lông Thử Thách - ", "").replace("Sân Cầu Lông Đẳng Cấp - ", "")}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </aside>
-
-                    {/* BÊN PHẢI: BẢN ĐỒ CHIẾM HẦU HẾT KHÔNG GIAN */}
-                    <div className="w-full lg:w-[68%] h-[280px] lg:h-full relative bg-slate-900">
-                        {/* Leaflet Map Div */}
-                        <div id="map" className="w-full h-full dark-map" style={{ zIndex: 1 }} />
-
-                        {/* NÚT KHÁM PHÁ NỔI (MỞ TRONG MAPS) */}
-                        {selectedBranch && (
-                            <button 
-                                onClick={handleOpenInGoogleMaps}
-                                className="absolute top-4 left-14 z-[10] flex items-center gap-1.5 bg-[#0f172a] hover:bg-[#1e293b] text-slate-300 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-slate-700/50 shadow-lg transition-all cursor-pointer"
-                            >
-                                <ExternalLink size={12} />
-                                <span>Mở trong Maps</span>
-                            </button>
-                        )}
-
-                        {/* THẺ THÔNG TIN NỔI TRÊN BẢN ĐỒ */}
-                        {selectedBranch && (
-                            <div className="absolute top-4 right-4 z-[10] bg-[#0d1424]/95 border border-emerald-500/30 rounded-2xl shadow-2xl backdrop-blur-md overflow-hidden"
-                                style={{ width: 260, animation: "slideInCard 0.3s cubic-bezier(.22,1,.36,1)" }}>
-                                <style>{`
-                                    @keyframes slideInCard {
-                                        from { opacity:0; transform: translateY(-12px) scale(0.96); }
-                                        to   { opacity:1; transform: translateY(0) scale(1); }
-                                    }
-                                `}</style>
-
-                                {/* Ảnh sân */}
-                                <div style={{ position:"relative", height: 130, overflow:"hidden" }}>
-                                    <img
-                                        src={selectedBranch.image}
-                                        alt={selectedBranch.name}
-                                        style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center" }}
-                                    />
-                                    {/* gradient overlay */}
-                                    <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom, transparent 40%, rgba(13,20,36,.9) 100%)" }}/>
-                                    {/* Badge ĐANG CHỌN */}
-                                    <span style={{
-                                        position:"absolute", top:8, left:8,
-                                        background:"rgba(0,245,160,.15)", border:"1px solid rgba(0,245,160,.4)",
-                                        color:"#00f5a0", fontSize:8, fontWeight:800,
-                                        padding:"3px 8px", borderRadius:99, letterSpacing:1.2, textTransform:"uppercase"
-                                    }}>
-                                        📍 Đang chọn vị trí
-                                    </span>
-                                    {/* Rating */}
-                                    <span style={{
-                                        position:"absolute", top:8, right:8,
-                                        background:"rgba(251,191,36,.2)", border:"1px solid rgba(251,191,36,.4)",
-                                        color:"#fde68a", fontSize:10, fontWeight:800,
-                                        padding:"3px 8px", borderRadius:99, display:"flex", alignItems:"center", gap:3
-                                    }}>
-                                        ★ {selectedBranch.rating}
-                                    </span>
-                                    {/* Tên sân trên ảnh */}
-                                    <div style={{ position:"absolute", bottom:8, left:10, right:10 }}>
-                                        <p style={{ margin:0, color:"#fff", fontSize:12, fontWeight:900, lineHeight:1.3, textShadow:"0 1px 6px rgba(0,0,0,.8)" }}>
-                                            {selectedBranch.name}
-                                        </p>
+                            <div className="p-6 md:w-3/5 flex flex-col justify-between bg-white dark:bg-slate-800">
+                                <div>
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 transition-colors">
+                                            {court.name}
+                                        </h3>
+                                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">{court.price}</span>
                                     </div>
-                                </div>
-
-                                {/* Thông tin chi tiết */}
-                                <div style={{ padding:"10px 12px", display:"flex", flexDirection:"column", gap:7 }}>
-                                    {/* Địa chỉ */}
-                                    <p style={{ margin:0, color:"#94a3b8", fontSize:10, display:"flex", alignItems:"flex-start", gap:5, lineHeight:1.4 }}>
-                                        <MapPin size={11} color="#f87171" style={{ flexShrink:0, marginTop:1 }}/>
-                                        <span>{selectedBranch.address}</span>
+                                    <p className="tt-muted text-sm mt-2 flex items-center gap-2">
+                                        <span>🏸</span> Loại thảm: {court.type}
                                     </p>
-
-                                    {/* Giờ & Giá */}
-                                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                                        <span style={{ display:"flex", alignItems:"center", gap:5, color:"#93c5fd", fontSize:10, fontWeight:600 }}>
-                                            <Clock size={11} color="#60a5fa"/>
-                                            {selectedBranch.openTime}
-                                        </span>
-                                        <span style={{ color:"#00f5a0", fontSize:11, fontWeight:800 }}>
-                                            {selectedBranch.priceRange.split(' - ')[0]}
-                                        </span>
+                                    <div className="mt-4 flex gap-2 flex-wrap">
+                                        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">Nước suối miễn phí</span>
+                                        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">Wifi tốc độ cao</span>
                                     </div>
-
-                                    {/* Số sân trống */}
-                                    <div style={{
-                                        display:"flex", alignItems:"center", gap:6,
-                                        background:"rgba(0,245,160,.08)", border:"1px solid rgba(0,245,160,.2)",
-                                        borderRadius:8, padding:"5px 9px"
-                                    }}>
-                                        <span style={{ width:7, height:7, borderRadius:"50%", background:"#00f5a0", flexShrink:0, boxShadow:"0 0 6px #00f5a0" }}/>
-                                        <span style={{ color:"#6ee7b7", fontSize:10, fontWeight:700 }}>
-                                            Còn {selectedBranch.freeCourts} sân trống hôm nay
-                                        </span>
-                                    </div>
-
-                                    {/* Nút đặt sân */}
-                                    <button
-                                        onClick={() => { setIsGridModalOpen(true); }}
-                                        style={{
-                                            width:"100%", padding:"8px 0",
-                                            background:"linear-gradient(135deg, #00f5a0, #00d4aa)",
-                                            border:"none", borderRadius:10, cursor:"pointer",
-                                            color:"#0a1628", fontSize:11, fontWeight:900,
-                                            display:"flex", alignItems:"center", justifyContent:"center", gap:5,
-                                            boxShadow:"0 4px 14px rgba(0,245,160,.35)",
-                                            transition:"transform .15s, box-shadow .15s"
-                                        }}
-                                        onMouseEnter={e => { e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow="0 6px 20px rgba(0,245,160,.5)"; }}
-                                        onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 4px 14px rgba(0,245,160,.35)"; }}
+                                </div>
+                                <div className="mt-6">
+                                    <button 
+                                        onClick={handleOpenGrid}
+                                        className="w-full py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-md bg-emerald-600 text-white hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5"
                                     >
-                                        ⚡ Đặt Sân Ngay
+                                        Xem lịch sân này
                                     </button>
                                 </div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    ))}
                 </div>
             </div>
 
-            {/* MODAL LƯỚI ĐẶT GIỜ (BẢNG GRID TÍNH TOÁN) */}
+            {/* MODAL GRID ĐẶT SÂN */}
             {isGridModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-2 sm:p-6">
-                    <div className="flex h-full w-full max-w-[1200px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-[#0c1219] animate-in zoom-in-95 duration-200">
+                    <div className="flex h-full w-full max-w-[1400px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-[#0c1219] animate-in zoom-in-95 duration-200">
                         
-                        {/* Header của Modal đặt lịch */}
+                        {/* HEADER LỊCH */}
                         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-emerald-700 px-6 py-4 dark:border-emerald-800">
-                            <div>
-                                <h2 className="text-lg font-bold text-white">Bảng Chọn Giờ Đặt Lịch</h2>
-                                <p className="text-emerald-200 text-xs mt-0.5">{selectedBranch?.name}</p>
-                            </div>
+                            <h2 className="text-xl font-bold text-white">Đặt lịch trực quan</h2>
                             <button 
                                 onClick={() => setIsGridModalOpen(false)}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/40 cursor-pointer font-bold"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/40"
                             >
                                 ✕
                             </button>
                         </div>
 
-                        {/* Thanh công cụ: Chọn ngày & giải thích chú thích màu sắc */}
+                        {/* THANH CÔNG CỤ: CHÚ THÍCH & CHỌN NGÀY */}
                         <div className="flex flex-col sm:flex-row shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-emerald-50/50 px-6 py-3 dark:border-slate-800 dark:bg-slate-900/50">
-                            <div className="flex items-center gap-4 text-xs font-semibold">
+                            <div className="flex items-center gap-4 text-sm font-medium">
                                 <div className="flex items-center gap-1.5">
-                                    <span className="block h-4.5 w-4.5 rounded border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800"></span>
-                                    <span className="text-slate-600 dark:text-slate-300">Trống</span>
+                                    <span className="block h-5 w-5 rounded border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800"></span>
+                                    <span className="text-slate-700 dark:text-slate-300">Trống</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                    <span className="block h-4.5 w-4.5 rounded border border-red-500 bg-red-400"></span>
-                                    <span className="text-slate-600 dark:text-slate-300">Đã đặt trước</span>
+                                    <span className="block h-5 w-5 rounded border border-red-500 bg-red-400"></span>
+                                    <span className="text-slate-700 dark:text-slate-300">Đã đặt</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                    <span className="block h-4.5 w-4.5 rounded border border-emerald-600 bg-emerald-500 shadow-sm shadow-emerald-500/40"></span>
-                                    <span className="text-slate-600 dark:text-slate-300">Đang chọn</span>
+                                    <span className="block h-5 w-5 rounded border border-emerald-600 bg-emerald-500 shadow-sm shadow-emerald-500/40"></span>
+                                    <span className="text-slate-700 dark:text-slate-300">Đang chọn</span>
                                 </div>
                             </div>
-
                             <div className="flex items-center gap-2">
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Chọn ngày thi đấu:</label>
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Ngày chơi:</label>
                                 <input 
                                     type="date"
                                     value={selectedDate}
                                     onChange={(e) => {
                                         setSelectedDate(e.target.value);
-                                        setSelectedCells([]); // Reset các ô đã chọn khi đổi ngày
+                                        setSelectedCells([]); // Reset selected when changing date
                                     }}
-                                    className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                                    className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                                 />
                             </div>
                         </div>
 
-                        {/* BẢNG LƯỚI GRID CHI TIẾT (CUỘN TRANG) */}
+                        {/* GRID THỜI GIAN */}
                         <div className="flex-1 overflow-auto bg-slate-50 p-4 dark:bg-[#121b24] relative">
                             <div className="inline-block min-w-full rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
                                 <table className="w-full border-collapse">
                                     <thead>
                                         <tr>
-                                            <th className="sticky left-0 z-20 w-32 border-b border-r border-slate-200 bg-slate-100 px-4 py-3 text-left text-xs font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                                                Tên Sân con
+                                            <th className="sticky left-0 z-20 w-32 border-b border-r border-slate-200 bg-slate-100 px-4 py-3 text-left text-sm font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                                                Tên Sân
                                             </th>
-                                            {normalizedTimeSlots.slice(0, -1).map((time) => (
-                                                <th key={time} className="min-w-[48px] border-b border-r border-slate-100 bg-slate-50 px-1 py-2 text-center text-[10px] font-semibold text-slate-500 dark:border-slate-700/50 dark:bg-slate-800 dark:text-slate-400">
+                                            {normalizedTimeSlots.slice(0, -1).map((time, index) => (
+                                                <th key={time} className="min-w-[48px] border-b border-r border-slate-100 bg-slate-50 px-1 py-2 text-center text-[11px] font-semibold text-slate-500 dark:border-slate-700/50 dark:bg-slate-800 dark:text-slate-400">
                                                     {time}
                                                 </th>
                                             ))}
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {activeCourts.map(court => (
+                                        {courtsInfo.map(court => (
                                             <tr key={court.id} className="group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                                                <td className="sticky left-0 z-10 w-32 border-b border-r border-slate-200 bg-white px-4 py-3 text-xs font-bold text-emerald-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-400">
+                                                <td className="sticky left-0 z-10 w-32 border-b border-r border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-emerald-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-400">
                                                     {court.name.split(' - ')[0]}
-                                                    <span className="block text-[9px] font-normal text-slate-400 mt-0.5">{court.price}</span>
+                                                    <span className="block text-[10px] font-normal text-slate-400">{court.price}</span>
                                                 </td>
                                                 {normalizedTimeSlots.slice(0, -1).map((time) => {
                                                     const isBooked = mockedBookedSlots[court.id]?.includes(time);
                                                     const isSelected = selectedCells.some(cell => cell.courtId === court.id && cell.time === time);
                                                     
-                                                    let cellClass = "cursor-pointer bg-white hover:bg-emerald-50 dark:bg-slate-800/50 dark:hover:bg-emerald-950/40";
+                                                    let cellClass = "cursor-pointer bg-white hover:bg-emerald-50 dark:bg-slate-800/50 dark:hover:bg-emerald-900/30";
                                                     if (isBooked) {
-                                                        cellClass = "bg-red-400/90 dark:bg-red-500/80 cursor-not-allowed";
+                                                        cellClass = "bg-red-400/90 cursor-not-allowed";
                                                     } else if (isSelected) {
-                                                        cellClass = "bg-emerald-500 dark:bg-emerald-600 shadow-inner";
+                                                        cellClass = "bg-emerald-500 shadow-inner";
                                                     }
 
                                                     return (
-                                                        <td 
-                                                            key={`${court.id}-${time}`}
-                                                            onClick={() => handleCellClick(court.id, time)}
-                                                            className={`border-b border-r border-slate-100 transition-colors duration-150 dark:border-slate-700/50 ${cellClass}`}
-                                                        >
-                                                            <div className="h-10 w-full"></div>
+                                                        <td key={`${court.id}-${time}`} onClick={() => handleCellClick(court.id, time)} className={`border-b border-r border-slate-100 dark:border-slate-700/50 ${cellClass}`}>
+                                                            <div className="h-8 w-full"></div>
                                                         </td>
                                                     );
                                                 })}
@@ -762,25 +360,29 @@ export default function CourtBooking() {
                             </div>
                         </div>
 
-                        {/* THANH TOÁN & TIẾP TỤC Ở FOOTER MODAL */}
-                        <div className="flex shrink-0 items-center justify-between border-t border-emerald-700 bg-[#0e172a] px-6 py-4 text-white shadow-[0_-4px_10px_rgba(0,0,0,0.1)]">
+                        {/* FOOTER THANH TOÁN */}
+                        <div className="flex shrink-0 items-center justify-between border-t border-emerald-700 bg-emerald-600 px-6 py-4 text-white shadow-[0_-4px_10px_rgba(0,0,0,0.1)]">
                             <div className="flex items-center gap-8">
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Tổng thời gian đặt</span>
-                                    <span className="text-lg font-bold text-emerald-400">{timeString}</span>
+                                    <span className="text-xs font-medium text-emerald-100">Tổng thời gian</span>
+                                    <span className="text-xl font-bold">{timeString}</span>
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Tổng tiền tạm tính</span>
-                                    <span className="text-lg font-bold text-amber-400">{totalMoney.toLocaleString('vi-VN')} đ</span>
+                                    <span className="text-xs font-medium text-emerald-100">Tổng tiền</span>
+                                    <span className="text-xl font-bold">{totalMoney.toLocaleString('vi-VN')} đ</span>
                                 </div>
                             </div>
                             <button 
-                                onClick={handleConfirmBooking}
+                                onClick={() => {
+                                    if (selectedCells.length === 0) return;
+                                    alert(`Đặt thành công tại: ${activeBranch.name}\nTổng tiền: ${totalMoney.toLocaleString('vi-VN')}đ`);
+                                    setSelectedCells([]); setIsGridModalOpen(false);
+                                }}
                                 disabled={selectedCells.length === 0}
-                                className={`rounded-xl px-8 py-3 font-bold text-sm transition-all cursor-pointer ${
+                                className={`rounded-xl px-8 py-3 font-bold transition-all ${
                                     selectedCells.length > 0 
                                     ? "bg-amber-400 text-slate-900 hover:bg-amber-300 hover:shadow-lg hover:shadow-amber-400/30 active:scale-95" 
-                                    : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                                    : "bg-emerald-700 text-emerald-400 cursor-not-allowed"
                                 }`}
                             >
                                 TIẾP THEO
