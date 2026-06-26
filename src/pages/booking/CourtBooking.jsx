@@ -18,6 +18,7 @@ import {
     timeSlots,
     normalizedTimeSlots
 } from "./bookingData";
+import { useNavigate } from "react-router-dom";
 
 export default function CourtBooking() {
     const navigate = useNavigate();
@@ -192,7 +193,6 @@ export default function CourtBooking() {
         });
     };
 
-    const activeCourts = activeBranch?.courts || [];
     const calculateTotal = () => {
         let totalMoney = 0;
         selectedCells.forEach(cell => {
@@ -352,8 +352,8 @@ export default function CourtBooking() {
                                             key={branch.id}
                                             onClick={() => setSelectedBranch(branch)}
                                             className={`p-4 rounded-2xl cursor-pointer transition-all duration-300 flex flex-col hover:-translate-y-0.5 active:scale-[0.99] ${isSelected
-                                                    ? "bg-[#102436]/90 border border-emerald-500/50 shadow-[0_4px_25px_rgba(16,185,129,0.15)]"
-                                                    : "bg-[#0c1525]/60 border border-white/5 hover:border-white/10 hover:bg-[#101c30]/50"
+                                                ? "bg-[#102436]/90 border border-emerald-500/50 shadow-[0_4px_25px_rgba(16,185,129,0.15)]"
+                                                : "bg-[#0c1525]/60 border border-white/5 hover:border-white/10 hover:bg-[#101c30]/50"
                                                 }`}
                                         >
                                             {/* Tiêu đề & Rating */}
@@ -498,11 +498,12 @@ export default function CourtBooking() {
                                     >
                                         ⚡ Đặt Sân Ngay
                                     </button>
-                                ))}
+
                                 </div>
-                        )}
+
                             </div>
-                </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* MODAL LƯỚI ĐẶT GIỜ (BẢNG GRID TÍNH TOÁN) */}
@@ -622,8 +623,8 @@ export default function CourtBooking() {
                                     onClick={handleConfirmBooking}
                                     disabled={selectedCells.length === 0}
                                     className={`rounded-xl px-7 py-3 font-black text-xs transition-all shadow-md border-0 cursor-pointer ${selectedCells.length > 0
-                                            ? "bg-amber-400 text-slate-900 hover:bg-amber-300 hover:shadow-lg hover:shadow-amber-400/25 active:scale-95"
-                                            : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                                        ? "bg-amber-400 text-slate-900 hover:bg-amber-300 hover:shadow-lg hover:shadow-amber-400/25 active:scale-95"
+                                        : "bg-slate-800 text-slate-500 cursor-not-allowed"
                                         }`}
                                 >
                                     TIẾP THEO
@@ -631,7 +632,8 @@ export default function CourtBooking() {
                             </div>
                         </div>
                     </div>
-            </section>
+                )}
+            </div>
         </div>
     );
 }
