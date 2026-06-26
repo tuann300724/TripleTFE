@@ -34,6 +34,7 @@ import Success from "./pages/Success";
 
 import Profile from "./pages/profile/Profile";
 import CourtBooking from "./pages/CourtBooking";
+import CourtDetailPage from "./pages/CourtDetail";
 
 import Dashboard from "./admin/Dashboard";
 
@@ -95,6 +96,8 @@ function App() {
                         <Route path="profile" element={<Profile />} />
 
                         <Route path="booking" element={<CourtBooking />} />
+
+                        <Route path="booking/:id" element={<CourtDetailPage />} />
 
                         <Route path="/login" element={<Login />} />
 
