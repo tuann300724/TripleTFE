@@ -35,6 +35,7 @@ import Success from "./pages/Success";
 import Profile from "./pages/profile/Profile";
 import CourtBooking from "./pages/booking/CourtBooking";
 import UserCourtDetail from "./pages/booking/CourtDetail";
+import CourtDetailPage from "./pages/booking/CourtDetailPage";
 
 import Dashboard from "./admin/Dashboard";
 
@@ -97,7 +98,8 @@ function App() {
                         <Route path="profile" element={<Profile />} />
 
                         <Route path="booking" element={<CourtBooking />} />
-                        <Route path="booking/:id" element={<UserCourtDetail />} />
+                        <Route path="booking/:id" element={<CourtDetailPage />} />
+                        <Route path="booking/:id/book" element={<UserCourtDetail />} />
 
 
                         <Route path="/login" element={<Login />} />

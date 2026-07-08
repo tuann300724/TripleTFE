@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -9,6 +9,7 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const navigate = useNavigate();
+
     async function handleSubmit(e) {
         e.preventDefault();
         setError("");
@@ -27,16 +28,15 @@ export default function Login() {
         }
     }
 
-
     return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-900 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-100 dark:bg-slate-900 px-4 py-12 sm:px-6 lg:px-8 transition-colors duration-300">
             {/* Background Blob Elements */}
-            <div className="absolute top-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-emerald-600/30 blur-3xl" />
-            <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-lime-500/20 blur-3xl" />
+            <div className="absolute top-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-emerald-400/20 dark:bg-emerald-600/30 blur-3xl" />
+            <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-lime-400/15 dark:bg-lime-500/20 blur-3xl" />
 
             {/* Back to Home Button */}
             <div className="absolute top-6 left-6 sm:top-8 sm:left-8 z-50">
-                <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-emerald-400 transition-colors duration-300">
+                <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-300">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                     </svg>
@@ -45,30 +45,30 @@ export default function Login() {
             </div>
 
             <div className="relative w-full max-w-md space-y-8">
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 shadow-2xl space-y-6">
+                {/* Card */}
+                <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-3xl p-8 shadow-xl dark:shadow-2xl space-y-6 transition-colors duration-300">
                     {/* Header */}
                     <div className="flex flex-col items-center">
                         <Link to="/" className="flex items-center gap-2">
                             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500 text-2xl shadow-lg shadow-emerald-500/30">
                                 🏸
                             </span>
-                            <span className="text-2xl font-bold tracking-tight text-white">
-                                Triple<span className="text-emerald-400">T</span>
+                            <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                                Triple<span className="text-emerald-500 dark:text-emerald-400">T</span>
                             </span>
                         </Link>
-                        <h2 className="mt-6 text-center text-3xl font-extrabold text-white">Đăng nhập tài khoản</h2>
-                        <p className="mt-2 text-center text-sm text-slate-400">
+                        <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900 dark:text-white">Đăng nhập tài khoản</h2>
+                        <p className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">
                             Chào mừng bạn trở lại với TripleT Badminton
                         </p>
                     </div>
-                    <form
-                        className="mt-8 space-y-5"
-                        onSubmit={handleSubmit}
-                    >
+
+                    <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+                        {/* Email */}
                         <div className="space-y-1">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">Email của bạn</label>
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">Email của bạn</label>
                             <div className="relative">
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                                     </svg>
@@ -79,15 +79,16 @@ export default function Login() {
                                     placeholder="name@example.com"
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
-                                    className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-4 py-3 text-white placeholder:text-slate-500 outline-none transition-all duration-300 hover:border-emerald-500/50 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                    className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 pl-10 pr-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all duration-300 hover:border-emerald-500/60 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                                 />
                             </div>
                         </div>
 
+                        {/* Password */}
                         <div className="space-y-1">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">Mật khẩu</label>
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">Mật khẩu</label>
                             <div className="relative">
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0V10.5m-2.25 0h13.5m-13.5 0a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25h13.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25M10.5 15h3" />
                                     </svg>
@@ -98,12 +99,12 @@ export default function Login() {
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
-                                    className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-10 py-3 text-white placeholder:text-slate-500 outline-none transition-all duration-300 hover:border-emerald-500/50 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                    className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 pl-10 pr-10 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all duration-300 hover:border-emerald-500/60 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-white transition-colors duration-300"
+                                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors duration-300"
                                 >
                                     {showPassword ? (
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
@@ -119,41 +120,41 @@ export default function Login() {
                             </div>
                         </div>
 
+                        {/* Remember + Forgot */}
                         <div className="flex items-center justify-between">
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="checkbox"
-                                    className="h-4.5 w-4.5 rounded border-white/20 bg-white/5 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                                    className="h-4 w-4 rounded border-slate-300 dark:border-white/20 bg-white dark:bg-white/5 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
                                 />
-                                <span className="text-sm text-slate-300">Ghi nhớ</span>
+                                <span className="text-sm text-slate-600 dark:text-slate-300">Ghi nhớ</span>
                             </label>
-                            <a href="#forgot" className="text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors duration-300" onClick={(e) => e.preventDefault()}>
+                            <a href="#forgot" className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors duration-300" onClick={(e) => e.preventDefault()}>
                                 Quên mật khẩu?
                             </a>
                         </div>
 
-                        {error && <div className="text-red-400 text-sm text-center font-semibold">{error}</div>}
-                        <div>
-                            <button
-                                type="submit"
-                                className="tt-hover-scale flex w-full items-center justify-center rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 transition-all duration-300 disabled:opacity-60"
-                                disabled={loading}
-                            >
-                                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-                            </button>
-                        </div>
+                        {error && <div className="text-red-500 dark:text-red-400 text-sm text-center font-semibold bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/20 rounded-xl py-2">{error}</div>}
+
+                        <button
+                            type="submit"
+                            className="tt-hover-scale flex w-full items-center justify-center rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-500 transition-all duration-300 disabled:opacity-60"
+                            disabled={loading}
+                        >
+                            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+                        </button>
                     </form>
 
                     {/* Divider */}
                     <div className="relative flex py-2 items-center">
-                        <div className="flex-grow border-t border-white/10"></div>
-                        <span className="flex-shrink mx-4 text-slate-400 text-xs font-semibold uppercase tracking-wider">Hoặc tiếp tục với</span>
-                        <div className="flex-grow border-t border-white/10"></div>
+                        <div className="flex-grow border-t border-slate-200 dark:border-white/10"></div>
+                        <span className="flex-shrink mx-4 text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-wider">Hoặc tiếp tục với</span>
+                        <div className="flex-grow border-t border-slate-200 dark:border-white/10"></div>
                     </div>
 
                     {/* Social Login Buttons */}
                     <div className="grid grid-cols-2 gap-4">
-                        <button className="tt-hover-lift flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10">
+                        <button className="tt-hover-lift flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 transition-all shadow-sm dark:shadow-none">
                             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -162,7 +163,7 @@ export default function Login() {
                             </svg>
                             Google
                         </button>
-                        <button className="tt-hover-lift flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10">
+                        <button className="tt-hover-lift flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 transition-all shadow-sm dark:shadow-none">
                             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z" fill="#1877F2" />
                             </svg>
@@ -170,10 +171,10 @@ export default function Login() {
                         </button>
                     </div>
 
-                    {/* Footer Links */}
-                    <div className="text-center text-sm text-slate-400">
+                    {/* Footer */}
+                    <div className="text-center text-sm text-slate-500 dark:text-slate-400">
                         Chưa có tài khoản?{" "}
-                        <Link to="/register" className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors duration-300">
+                        <Link to="/register" className="font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors duration-300">
                             Đăng ký ngay
                         </Link>
                     </div>
@@ -181,5 +182,4 @@ export default function Login() {
             </div>
         </div>
     );
-
 }

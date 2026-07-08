@@ -20,6 +20,12 @@ export default function ProfileCourtsCreate({ onBack }) {
     const [thumbnailPreview, setThumbnailPreview] = useState(null);
     const fileInputRef = useRef(null);
 
+    // Gallery images (max 4)
+    const MAX_GALLERY = 4;
+    const [galleryFiles, setGalleryFiles] = useState([]);
+    const [galleryPreviews, setGalleryPreviews] = useState([]);
+    const galleryInputRef = useRef(null);
+
     // Address
     const [provinces, setProvinces] = useState([]);
     const [districts, setDistricts] = useState([]);
@@ -122,6 +128,24 @@ export default function ProfileCourtsCreate({ onBack }) {
         setThumbnail(null);
         setThumbnailPreview(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
+    // -- HANDLERS FOR GALLERY --
+    const handleGalleryChange = (e) => {
+        const files = Array.from(e.target.files);
+        const remaining = MAX_GALLERY - galleryFiles.length;
+        const toAdd = files.slice(0, remaining);
+        if (toAdd.length === 0) return;
+        const newPreviews = toAdd.map(f => URL.createObjectURL(f));
+        setGalleryFiles(prev => [...prev, ...toAdd]);
+        setGalleryPreviews(prev => [...prev, ...newPreviews]);
+        // Reset input so same file can be re-selected
+        if (galleryInputRef.current) galleryInputRef.current.value = "";
+    };
+
+    const removeGalleryImage = (index) => {
+        setGalleryFiles(prev => prev.filter((_, i) => i !== index));
+        setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
     };
 
     // -- HANDLERS FOR AMENITIES --
@@ -475,6 +499,98 @@ export default function ProfileCourtsCreate({ onBack }) {
                             <p className="text-[10px] text-slate-400 mt-1">* Các tiện ích bạn chọn ở trên sẽ được tự động nối vào cuối phần mô tả này.</p>
                         </div>
                     </div>
+                </div>
+
+                {/* 6. HÌNH ẢNH THƯ VIỆN SÂN */}
+                <div className="bg-slate-50/50 dark:bg-slate-900/20 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-5 shadow-sm">
+                    <h4 className="text-sm font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="bg-emerald-100 dark:bg-emerald-900/30 w-6 h-6 flex items-center justify-center rounded-lg">6</span>
+                            Hình ảnh thư viện sân
+                        </div>
+                        <span className="text-[11px] font-normal text-slate-400 normal-case tracking-normal">
+                            {galleryPreviews.length}/{MAX_GALLERY} ảnh
+                        </span>
+                    </h4>
+
+                    <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">
+                        Thêm tối đa <strong>4 ảnh</strong> thực tế của sân để người dùng xem trước khi đặt lịch. Ảnh nên rõ nét, đủ sáng.
+                    </p>
+
+                    {/* Grid 4 slot ảnh */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {[0, 1, 2, 3].map((slotIdx) => {
+                            const preview = galleryPreviews[slotIdx];
+                            const file    = galleryFiles[slotIdx];
+                            return preview ? (
+                                // Slot đã có ảnh — hiển thị preview + nút xóa
+                                <div key={slotIdx} className="relative group rounded-xl overflow-hidden aspect-video border border-emerald-300 dark:border-emerald-700 shadow-sm">
+                                    <img
+                                        src={preview}
+                                        alt={`Gallery ${slotIdx + 1}`}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                    {/* Overlay xóa */}
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                                        <button
+                                            type="button"
+                                            onClick={() => removeGalleryImage(slotIdx)}
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg"
+                                            title="Xóa ảnh này"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    {/* Badge số thứ tự */}
+                                    <span className="absolute top-1.5 left-1.5 bg-black/50 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                                        Ảnh {slotIdx + 1}
+                                    </span>
+                                </div>
+                            ) : (
+                                // Slot trống — nút thêm ảnh (chỉ hiển thị khi số ảnh hiện tại == slotIdx)
+                                slotIdx === galleryPreviews.length ? (
+                                    <button
+                                        key={slotIdx}
+                                        type="button"
+                                        onClick={() => galleryInputRef.current?.click()}
+                                        className="aspect-video rounded-xl border-2 border-dashed border-emerald-400/50 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-900/10 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex flex-col items-center justify-center gap-1.5 text-emerald-600 dark:text-emerald-400 transition-all hover:border-emerald-500"
+                                    >
+                                        <svg className="w-6 h-6 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        <span className="text-[10px] font-bold">Thêm ảnh {slotIdx + 1}</span>
+                                    </button>
+                                ) : (
+                                    // Slot khóa (chưa điền ảnh trước)
+                                    <div
+                                        key={slotIdx}
+                                        className="aspect-video rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-100/30 dark:bg-slate-800/20 flex flex-col items-center justify-center gap-1.5 opacity-40 cursor-not-allowed"
+                                    >
+                                        <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <span className="text-[10px] font-semibold text-slate-400">Ảnh {slotIdx + 1}</span>
+                                    </div>
+                                )
+                            );
+                        })}
+                    </div>
+
+                    {/* Gợi ý định dạng */}
+                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                        * Định dạng hỗ trợ: JPG, PNG, WEBP. Kích thước tối đa mỗi ảnh: 5MB. Tỷ lệ khuyên dùng 16:9.
+                    </p>
+
+                    {/* Hidden input file */}
+                    <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        ref={galleryInputRef}
+                        onChange={handleGalleryChange}
+                    />
                 </div>
 
                 {/* Nút hành động */}
