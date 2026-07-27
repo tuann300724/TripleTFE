@@ -23,6 +23,96 @@ const amenityIcon = (name) => {
     return <CheckCircle2 size={13} className="text-emerald-500 dark:text-emerald-400" />;
 };
 
+const groupAndMergeSelectedCells = (selectedCells, courts) => {
+    if (!selectedCells || selectedCells.length === 0) return [];
+    
+    // Group by courtId
+    const groups = {};
+    selectedCells.forEach(cell => {
+        if (!groups[cell.courtId]) {
+            groups[cell.courtId] = [];
+        }
+        groups[cell.courtId].push(cell.time);
+    });
+
+    const result = [];
+
+    Object.keys(groups).forEach(courtIdStr => {
+        const courtId = parseInt(courtIdStr, 10);
+        const court = courts.find(c => c.id === courtId);
+        if (!court) return;
+
+        const times = groups[courtIdStr];
+        
+        // Convert hh:mm to minutes from midnight
+        const timeInMinutes = times.map(t => {
+            const [h, m] = t.split(":").map(Number);
+            return { time: t, mins: h * 60 + m };
+        });
+
+        // Sort by minutes ascending
+        timeInMinutes.sort((a, b) => a.mins - b.mins);
+
+        // Group consecutive slots (where diff is exactly 30 minutes)
+        let currentGroup = [];
+        const mergedRanges = [];
+
+        timeInMinutes.forEach((item) => {
+            if (currentGroup.length === 0) {
+                currentGroup.push(item);
+            } else {
+                const lastItem = currentGroup[currentGroup.length - 1];
+                if (item.mins - lastItem.mins === 30) {
+                    currentGroup.push(item);
+                } else {
+                    mergedRanges.push([...currentGroup]);
+                    currentGroup = [item];
+                }
+            }
+        });
+        if (currentGroup.length > 0) {
+            mergedRanges.push(currentGroup);
+        }
+
+        // Format each group
+        mergedRanges.forEach(group => {
+            const startMins = group[0].mins;
+            // 30 minutes duration for the last slot
+            const endMins = group[group.length - 1].mins + 30;
+
+            const formatTime = (totalMins) => {
+                const h = Math.floor(totalMins / 60);
+                const m = totalMins % 60;
+                return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            };
+
+            const startTimeStr = formatTime(startMins);
+            const endTimeStr = formatTime(endMins);
+            const slotCount = group.length;
+            const price = slotCount * (court.pricePerSlot || 0);
+
+            result.push({
+                courtId,
+                courtName: court.name,
+                startTime: startTimeStr,
+                endTime: endTimeStr,
+                timeRange: `${startTimeStr} - ${endTimeStr}`,
+                slotCount,
+                price,
+                rawTimes: group.map(g => g.time)
+            });
+        });
+    });
+
+    // Sort result by courtId then startTime
+    return result.sort((a, b) => {
+        if (a.courtId !== b.courtId) return a.courtId - b.courtId;
+        const [aH, aM] = a.startTime.split(":").map(Number);
+        const [bH, bM] = b.startTime.split(":").map(Number);
+        return (aH * 60 + aM) - (bH * 60 + bM);
+    });
+};
+
 export default function CourtDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -77,6 +167,8 @@ export default function CourtDetailPage() {
     const timeStr     = totalMins >= 60
         ? `${Math.floor(totalMins/60)}h${totalMins%60>0 ? totalMins%60+"m":""}`
         : totalMins > 0 ? `${totalMins} phút` : "—";
+
+    const mergedSlots = groupAndMergeSelectedCells(selectedCells, branch.courts);
 
     const handleConfirm = () => {
         if (!selectedCells.length) return;
@@ -195,52 +287,120 @@ export default function CourtDetailPage() {
                             </div>
                         </div>
 
-                        {/* Lưới chọn slot giờ */}
-                        <div className="border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden bg-white dark:bg-[#0b1422] shadow-md dark:shadow-xl">
-                            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-white/10 scrollbar-track-transparent">
-                                <table className="border-collapse table-fixed min-w-max w-full">
-                                    <thead>
-                                        <tr>
-                                            <th className="sticky left-0 z-20 w-[140px] bg-slate-50 border-r border-slate-200 border-b border-slate-200 dark:bg-[#0d1627] dark:border-r-white/10 dark:border-b-white/5 p-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                                Sân / Giờ
-                                            </th>
-                                            {timeSlots.map(t => (
-                                                <th key={t} className="w-11 bg-slate-50/80 border-r border-slate-200/50 border-b border-slate-200/50 dark:bg-[#0c1525] dark:border-r-white/5 dark:border-b-white/5 py-2.5 text-center text-[9px] font-black text-slate-500">
-                                                    {t}
+                        {/* Lưới chọn slot giờ và Giỏ hàng */}
+                        <div className="flex flex-col lg:flex-row gap-6 items-start">
+                            {/* Bảng chọn giờ */}
+                            <div className="flex-1 w-full border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden bg-white dark:bg-[#0b1422] shadow-md dark:shadow-xl">
+                                <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-white/10 scrollbar-track-transparent">
+                                    <table className="border-collapse table-fixed min-w-max w-full">
+                                        <thead>
+                                            <tr>
+                                                <th className="sticky left-0 z-20 w-[140px] bg-slate-50 border-r border-slate-200 border-b border-slate-200 dark:bg-[#0d1627] dark:border-r-white/10 dark:border-b-white/5 p-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                                    Sân / Giờ
                                                 </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {branch.courts.map((court, ri) => (
-                                            <tr key={court.id} className={ri % 2 === 0 ? "bg-white dark:bg-[#0b1422]" : "bg-slate-50/30 dark:bg-[#0c1525]"}>
-                                                {/* Tên sân con sticky bên trái */}
-                                                <td className={`sticky left-0 z-10 w-[140px] border-r border-slate-200 border-b border-slate-100 dark:border-r-white/10 dark:border-b-white/5 px-3 py-2.5 ${ri % 2 === 0 ? "bg-slate-100 dark:bg-[#0d1730]" : "bg-slate-100/90 dark:bg-[#0d1830]"} shadow-[2px_0_5px_rgba(0,0,0,0.05)] dark:shadow-[2px_0_5px_rgba(0,0,0,0.3)]`}>
-                                                    <p className="m-0 text-xs font-black text-emerald-600 dark:text-emerald-400 leading-none">
-                                                        {court.name.split(" - ")[0]}
-                                                    </p>
-                                                    <p className="m-0 mt-1 text-[9px] text-slate-500 dark:text-slate-400 font-bold">{court.price}</p>
-                                                </td>
-                                                {timeSlots.map(time => {
-                                                    const booked = mockedBookedSlots[court.id]?.includes(time);
-                                                    const chosen = selectedCells.some(c => c.courtId === court.id && c.time === time);
-                                                    
-                                                    let cellClass = "cursor-pointer bg-white dark:bg-[#0b1422] hover:bg-emerald-50 dark:hover:bg-emerald-500/20";
-                                                    if (booked) cellClass = "bg-rose-500/70 border-0 cursor-not-allowed text-white";
-                                                    else if (chosen) cellClass = "bg-emerald-500 border-0 shadow-[inset_0_0_8px_rgba(0,0,0,0.2)] text-white";
- 
-                                                    return (
-                                                        <td
-                                                            key={`${court.id}-${time}`}
-                                                            onClick={() => handleCellClick(court.id, time)}
-                                                            className={`h-9 w-11 border-r border-b border-slate-100 dark:border-white/5 transition-colors duration-100 ${cellClass}`}
-                                                        />
-                                                    );
-                                                })}
+                                                {timeSlots.map(t => (
+                                                    <th key={t} className="w-11 bg-slate-50/80 border-r border-slate-200/50 border-b border-slate-200/50 dark:bg-[#0c1525] dark:border-r-white/5 dark:border-b-white/5 py-2.5 text-center text-[9px] font-black text-slate-500">
+                                                        {t}
+                                                    </th>
+                                                ))}
                                             </tr>
+                                        </thead>
+                                        <tbody>
+                                            {branch.courts.map((court, ri) => (
+                                                <tr key={court.id} className={ri % 2 === 0 ? "bg-white dark:bg-[#0b1422]" : "bg-slate-50/30 dark:bg-[#0c1525]"}>
+                                                    {/* Tên sân con sticky bên trái */}
+                                                    <td className={`sticky left-0 z-10 w-[140px] border-r border-slate-200 border-b border-slate-100 dark:border-r-white/10 dark:border-b-white/5 px-3 py-2.5 ${ri % 2 === 0 ? "bg-slate-100 dark:bg-[#0d1730]" : "bg-slate-100/90 dark:bg-[#0d1830]"} shadow-[2px_0_5px_rgba(0,0,0,0.05)] dark:shadow-[2px_0_5px_rgba(0,0,0,0.3)]`}>
+                                                        <p className="m-0 text-xs font-black text-emerald-600 dark:text-emerald-400 leading-none">
+                                                            {court.name.split(" - ")[0]}
+                                                        </p>
+                                                        <p className="m-0 mt-1 text-[9px] text-slate-500 dark:text-slate-400 font-bold">{court.price}</p>
+                                                    </td>
+                                                    {timeSlots.map(time => {
+                                                        const booked = mockedBookedSlots[court.id]?.includes(time);
+                                                        const chosen = selectedCells.some(c => c.courtId === court.id && c.time === time);
+                                                        
+                                                        let cellClass = "cursor-pointer bg-white dark:bg-[#0b1422] hover:bg-emerald-50 dark:hover:bg-emerald-500/20";
+                                                        if (booked) cellClass = "bg-rose-500/70 border-0 cursor-not-allowed text-white";
+                                                        else if (chosen) cellClass = "bg-emerald-500 border-0 shadow-[inset_0_0_8px_rgba(0,0,0,0.2)] text-white";
+
+                                                        // Compute exact range and tooltip
+                                                        const [sh, sm] = time.split(":").map(Number);
+                                                        const endSlotMins = sh * 60 + sm + 30;
+                                                        const endSlotH = Math.floor(endSlotMins / 60).toString().padStart(2, '0');
+                                                        const endSlotM = (endSlotMins % 60).toString().padStart(2, '0');
+                                                        const slotRange = `${time} - ${endSlotH}:${endSlotM}`;
+                                                        
+                                                        const tooltipText = booked
+                                                            ? `Sân ${court.name.split(' - ')[0]}: Khung giờ ${slotRange} đã được đặt trước`
+                                                            : chosen
+                                                            ? `Sân ${court.name.split(' - ')[0]}: Đang chọn ${slotRange} (${(court.pricePerSlot || 0).toLocaleString('vi-VN')}đ). Bấm để bỏ chọn.`
+                                                            : `Sân ${court.name.split(' - ')[0]}: Chọn ${slotRange} (${(court.pricePerSlot || 0).toLocaleString('vi-VN')}đ)`;
+
+                                                        return (
+                                                            <td
+                                                                key={`${court.id}-${time}`}
+                                                                onClick={() => handleCellClick(court.id, time)}
+                                                                title={tooltipText}
+                                                                className={`h-9 w-11 border-r border-b border-slate-100 dark:border-white/5 transition-colors duration-100 ${cellClass}`}
+                                                            />
+                                                        );
+                                                    })}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Panel tóm tắt giờ chọn ở bên phải (chỉ hiện khi có ô chọn) */}
+                            <div className="w-full lg:w-72 shrink-0 border border-slate-200 dark:border-white/5 rounded-2xl p-4 bg-white dark:bg-[#0b1422] shadow-md dark:shadow-xl">
+                                <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3 mb-3">
+                                    <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                                        Khung giờ đã chọn ({selectedCells.length})
+                                    </h3>
+                                    {selectedCells.length > 0 && (
+                                        <button 
+                                            type="button"
+                                            onClick={() => setSelectedCells([])}
+                                            className="text-[10px] text-rose-500 hover:text-rose-600 font-bold transition-colors cursor-pointer"
+                                        >
+                                            Xóa tất cả
+                                        </button>
+                                    )}
+                                </div>
+                                {selectedCells.length === 0 ? (
+                                    <div className="py-6 text-center text-slate-400 dark:text-slate-500">
+                                        <Clock size={24} className="mx-auto mb-1.5 opacity-55 text-slate-350 dark:text-slate-650" />
+                                        <p className="text-[10px] font-bold">Chưa chọn khung giờ nào</p>
+                                        <p className="text-[9px] mt-0.5 text-slate-400 dark:text-slate-550 leading-relaxed">Nhấp vào ô trống màu trắng trên bảng lịch để chọn giờ chơi.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                                        {mergedSlots.map((slot, idx) => (
+                                            <div key={idx} className="group relative border border-slate-100 dark:border-white/5 rounded-xl p-2.5 bg-slate-50 dark:bg-[#08101a] hover:border-emerald-500/40 dark:hover:border-emerald-500/25 transition-all flex items-center justify-between shadow-sm">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-450">{slot.courtName.split(' - ')[0]}</span>
+                                                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                                                        <Clock size={10} className="text-emerald-500 dark:text-emerald-400" />
+                                                        {slot.timeRange}
+                                                    </span>
+                                                    <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold">({slot.slotCount * 30} phút)</span>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <span className="text-[11px] font-black text-amber-600 dark:text-amber-400">{slot.price.toLocaleString('vi-VN')}đ</span>
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setSelectedCells(prev => prev.filter(c => !(c.courtId === slot.courtId && slot.rawTimes.includes(c.time))))}
+                                                        className="text-slate-400 hover:text-rose-500 p-0.5 rounded transition-all cursor-pointer"
+                                                        title="Hủy chọn khung giờ này"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </div>
+                                            </div>
                                         ))}
-                                    </tbody>
-                                </table>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

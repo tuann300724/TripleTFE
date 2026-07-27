@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import {
@@ -195,6 +195,14 @@ export default function CourtBooking() {
     };
 
     const { totalMoney, timeString } = calculateTotal();
+
+    const handleRemoveSlots = (courtId, times) => {
+        setSelectedCells(prev => prev.filter(cell => !(cell.courtId === courtId && times.includes(cell.time))));
+    };
+
+    const handleClearAll = () => {
+        setSelectedCells([]);
+    };
 
     const handleConfirmBooking = () => {
         if (selectedCells.length === 0) return;
@@ -410,6 +418,8 @@ export default function CourtBooking() {
                 onConfirmBooking={handleConfirmBooking}
                 totalMoney={totalMoney}
                 timeString={timeString}
+                onRemoveSlots={handleRemoveSlots}
+                onClearAll={handleClearAll}
             />
         </div>
     );

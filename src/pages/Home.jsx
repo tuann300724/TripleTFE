@@ -129,7 +129,7 @@ export default function Home() {
             </div>
             <div style={{ marginTop: 32, animation: "sFadeUp .9s .7s ease both", display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div style={{ width: 240, height: 3, borderRadius: 3, background: "rgba(16,185,129,.08)", overflow: "hidden", boxShadow: "inset 0 0 4px rgba(0,0,0,.3)" }}>
-                <div style={{ width: `${loadPct}%`, height: "100%", borderRadius: 3, background: "linear-gradient(90deg,#059669,#34d399,#059669)", backgroundSize: "200% 100%", animation: "sShine .8s linear infinite", transition: "width .3s ease" }} />
+                <div style={{ width: `${loadPct}%`, height: "100%", borderRadius: 3, background: "linear-gradient(90deg,#059669,#34d399,#059669)", backgroundSize: "200% 100%", animation: "sShine .5s linear infinite", transition: "width .3s ease" }} />
               </div>
               <div style={{ marginTop: 10, fontSize: 11, fontWeight: 700, color: "#475569", fontVariantNumeric: "tabular-nums", letterSpacing: 1.5, textAlign: "center" }}>
                 ĐANG TẢI... {loadPct}%
