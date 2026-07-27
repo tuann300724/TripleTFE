@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { LayoutDashboard, DollarSign, ShoppingCart, Users, Package } from "lucide-react";
-import AdminSidebar from "./components/AdminSidebar";
+import { API_BASE } from "../config";
+
 
 // IMPORT CHART.JS
 import {
@@ -33,10 +34,10 @@ export default function Dashboard() {
         const fetchData = async () => {
             try {
                 const [resPayments, resOrders, resProducts, resUsers] = await Promise.all([
-                    fetch("https://localhost:7147/api/Payments").then(res => res.json()),
-                    fetch("https://localhost:7147/api/Orders").then(res => res.json()),
-                    fetch("https://localhost:7147/api/Products").then(res => res.json()),
-                    fetch("https://localhost:7147/api/User").then(res => res.json())
+                    fetch(API_BASE + "/Payments").then(res => res.json()),
+                    fetch(API_BASE + "/Orders").then(res => res.json()),
+                    fetch(API_BASE + "/Products").then(res => res.json()),
+                    fetch(API_BASE + "/User").then(res => res.json())
                 ]);
 
                 // Lấy thông tin thời gian hiện tại của hệ thống máy tính
@@ -132,7 +133,7 @@ export default function Dashboard() {
                 ticks: { color: "#64748B", font: { size: 11 } }
             },
             y: {
-                grid: { color: "#E2E8F0" },
+                grid: { color: "#1e293b" },
                 border: { dash: [5, 5] },
                 ticks: {
                     color: "#64748B",
@@ -155,9 +156,7 @@ export default function Dashboard() {
     }
 
     return (
-        <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
-            <AdminSidebar />
-            <div className="flex-1 overflow-x-hidden">
+        <div className="flex-1 overflow-x-hidden">
                 <div className="p-6 space-y-8">
 
                     {/* Header */}
@@ -252,6 +251,5 @@ export default function Dashboard() {
 
                 </div>
             </div>
-        </div>
     );
 }

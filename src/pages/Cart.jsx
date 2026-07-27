@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { Trash2 } from "lucide-react";
+import api from "../service/api";
+import { Trash2, ShoppingCart, ArrowLeft } from "lucide-react";
+import { FadeIn } from "../components/Animate";
+import Breadcrumb from "../components/Breadcrumb";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Cart() {
     const navigate = useNavigate();
-
-    const user = JSON.parse(localStorage.getItem("user"));
+    const { user } = useAuth();
 
     const [cartItems, setCartItems] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     // LOAD CART
     useEffect(() => {
@@ -20,15 +23,15 @@ export default function Cart() {
             try {
 
                 // lấy cart theo user
-                const cartRes = await axios.get(
-                    "https://localhost:7147/api/Carts"
+                const cartRes = await api.get(
+                    "/Carts"
                 );
 
                 const userCart = cartRes.data.find(
                     (cart) => cart.userId === user.userId
                 );
 
-                if (!userCart) {
+                if (!userCart?.cartItems || userCart.cartItems.length === 0) {
 
                     setCartItems([]);
 
@@ -40,20 +43,21 @@ export default function Cart() {
 
                     userCart.cartItems.map(async (item) => {
 
-                        const variantRes = await axios.get(
-                            `https://localhost:7147/api/ProductVariants/${item.variantId}`
-                        );
+                        try {
+                            const variantRes = await api.get(
+                                `/ProductVariants/${item.variantId}`
+                            );
 
-                        const variant = variantRes.data;
+                            const variant = variantRes.data;
 
-                        // lấy product
-                        const productRes = await axios.get(
-                            `https://localhost:7147/api/Products/${variant.productId}`
-                        );
+                            // lấy product
+                            const productRes = await api.get(
+                                `/Products/${variant.productId}`
+                            );
 
-                        const product = productRes.data;
+                            const product = productRes.data;
 
-                        return {
+                            return {
 
                             cartItemId: item.cartItemId,
 
@@ -67,21 +71,33 @@ export default function Cart() {
 
                             product: product
                         };
+                        } catch {
+                            return {
+                                cartItemId: item.cartItemId,
+                                cartId: item.cartId,
+                                variantId: item.variantId,
+                                quantity: item.quantity,
+                                variant: null,
+                                product: null
+                            };
+                        }
                     })
                 );
 
                 setCartItems(items);
+                setLoading(false);
 
             } catch (err) {
 
                 console.log(err);
+                setLoading(false);
 
             }
         };
 
         fetchCart();
 
-    }, []);
+    }, [user]);
 
     // UPDATE QUANTITY
     const updateQuantity = async (cartItemId, delta) => {
@@ -98,8 +114,8 @@ export default function Cart() {
 
         try {
 
-            await axios.put(
-                `https://localhost:7147/api/CartItems/${cartItemId}`,
+            await api.put(
+                `/CartItems/${cartItemId}`,
                 {
                     cartId: item.cartId,
                     variantId: item.variantId,
@@ -125,8 +141,8 @@ export default function Cart() {
     // DELETE ITEM
     const removeItem = async (cartItemId) => {
         try {
-            await axios.delete(
-                `https://localhost:7147/api/CartItems/${cartItemId}`
+            await api.delete(
+                `/CartItems/${cartItemId}`
             );
 
             setCartItems(
@@ -177,6 +193,8 @@ export default function Cart() {
 
             <div className="mx-auto max-w-6xl px-6 md:px-12">
 
+                <Breadcrumb items={[{ label: "Giỏ hàng" }]} />
+
                 {/* TITLE */}
                 <div className="mb-8">
                     <span className="tt-label text-xs">
@@ -188,13 +206,17 @@ export default function Cart() {
                     </h1>
                 </div>
 
-                {cartItems.length > 0 ? (
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+                    </div>
+                ) : cartItems.length > 0 ? (
 
                     <div className="grid gap-8 lg:grid-cols-12 items-start">
 
                         {/* CART LIST */}
                         <div className="lg:col-span-8 space-y-4">
-
+                            <FadeIn>
                             <div className="tt-card overflow-hidden">
 
                                 <div className="hidden md:grid grid-cols-12 gap-4 border-b border-slate-200 dark:border-slate-800 p-6 text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -228,7 +250,7 @@ export default function Cart() {
                                             {/* PRODUCT */}
                                             <div className="col-span-1 md:col-span-6 flex gap-4">
 
-                                                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                                                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-600">
 
                                                     <img
                                                         src={item.product.thumbnail}
@@ -241,29 +263,15 @@ export default function Cart() {
 
                                                     <Link
                                                         to={`/product/${item.product.productId}`}
-                                                        className="font-semibold text-slate-900 dark:text-white"
+                                                        className="font-semibold text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                                                     >
                                                         {item.product.productName}
                                                     </Link>
 
                                                     <p className="text-xs text-slate-400">
-                                                        Size: {item.variant.size}
+                                                        Size: {item.variant.size} / Màu: {item.variant.color}
                                                     </p>
 
-                                                    <p className="text-xs text-slate-400">
-                                                        Màu: {item.variant.color}
-                                                    </p>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            removeItem(item.cartItemId)
-                                                        }
-                                                        className="w-fit mt-1.5 flex items-center gap-1.5 rounded-md bg-red-50 dark:bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 transition-colors hover:bg-red-100 dark:hover:bg-red-500/20"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                        Xóa sản phẩm
-                                                    </button>
                                                 </div>
                                             </div>
 
@@ -277,7 +285,7 @@ export default function Cart() {
                                             {/* QUANTITY */}
                                             <div className="col-span-1 md:col-span-2 flex justify-center">
 
-                                                <div className="flex h-9 items-center rounded-lg border overflow-hidden">
+                                                <div className="flex h-9 items-center rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
 
                                                     <button
                                                         onClick={() =>
@@ -286,12 +294,12 @@ export default function Cart() {
                                                                 -1
                                                             )
                                                         }
-                                                        className="px-3 h-full"
+                                                        className="px-3 h-full text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200 active:scale-[0.95]"
                                                     >
                                                         -
                                                     </button>
 
-                                                    <span className="w-10 text-center">
+                                                    <span className="w-10 text-center text-slate-900 dark:text-white">
                                                         {item.quantity}
                                                     </span>
 
@@ -302,7 +310,7 @@ export default function Cart() {
                                                                 1
                                                             )
                                                         }
-                                                        className="px-3 h-full"
+                                                        className="px-3 h-full text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200 active:scale-[0.95]"
                                                     >
                                                         +
                                                     </button>
@@ -310,13 +318,21 @@ export default function Cart() {
                                             </div>
 
                                             {/* TOTAL */}
-                                            <div className="col-span-1 md:col-span-2 text-right font-bold text-emerald-600">
-
-                                                {formatPrice(
-                                                    item.variant.price *
-                                                    item.quantity
-                                                )}
-
+                                            <div className="col-span-1 md:col-span-2 text-right flex flex-col items-end gap-1.5">
+                                                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                                                    {formatPrice(
+                                                        item.variant.price *
+                                                        item.quantity
+                                                    )}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeItem(item.cartItemId)}
+                                                    className="flex items-center gap-1 rounded-lg border border-red-200/60 px-2.5 py-1 text-[11px] font-medium text-red-400 transition-all duration-200 hover:bg-red-50 hover:border-red-300 hover:text-red-500 active:scale-[0.95] dark:border-red-900/40 dark:hover:bg-red-950/20"
+                                                >
+                                                    <Trash2 size={12} />
+                                                    Xóa
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
@@ -326,18 +342,20 @@ export default function Cart() {
                             {/* BACK */}
                             <Link
                                 to="/product"
-                                className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-500"
+                                className="group mt-4 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md hover:shadow-emerald-500/5 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-emerald-500/30"
                             >
-                                ← Tiếp tục mua sắm
+                                <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
+                                Tiếp tục mua sắm
                             </Link>
+                            </FadeIn>
                         </div>
 
                         {/* SUMMARY */}
                         <div className="lg:col-span-4 space-y-6">
-
+                            <FadeIn delay={150}>
                             <div className="tt-card p-6 space-y-4">
 
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b pb-3">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-3">
 
                                     Tóm tắt đơn hàng
 
@@ -347,7 +365,7 @@ export default function Cart() {
 
                                     <div className="flex justify-between">
 
-                                        <span>Tạm tính</span>
+                                        <span className="text-slate-600 dark:text-slate-400">Tạm tính</span>
 
                                         <span className="font-semibold">
                                             {formatPrice(subtotal)}
@@ -356,7 +374,7 @@ export default function Cart() {
 
                                     <div className="flex justify-between">
 
-                                        <span>Phí vận chuyển</span>
+                                        <span className="text-slate-600 dark:text-slate-400">Phí vận chuyển</span>
 
                                         <span className="font-semibold">
                                             Miễn phí
@@ -366,13 +384,13 @@ export default function Cart() {
 
                                 </div>
 
-                                <div className="border-t pt-4 flex justify-between items-baseline">
+                                <div className="border-t border-slate-200 dark:border-slate-700 pt-4 flex justify-between items-baseline">
 
-                                    <span className="text-base font-bold">
+                                    <span className="text-base font-bold text-slate-900 dark:text-white">
                                         Tổng cộng
                                     </span>
 
-                                    <span className="text-2xl font-extrabold text-emerald-600">
+                                    <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
 
                                         {formatPrice(total)}
 
@@ -387,23 +405,23 @@ export default function Cart() {
                                     Tiến hành thanh toán
                                 </button>
                             </div>
+                            </FadeIn>
                         </div>
                     </div>
 
                 ) : (
 
                     // EMPTY CART
+                    <FadeIn>
                     <div className="tt-card p-12 text-center max-w-xl mx-auto mt-8">
 
-                        <p className="text-6xl">
-                            🛒
-                        </p>
+                        <ShoppingCart size={56} className="mx-auto text-slate-400 dark:text-slate-500" />
 
-                        <h2 className="text-xl font-bold mt-4">
+                        <h2 className="text-xl font-bold mt-4 text-slate-900 dark:text-white">
                             Giỏ hàng trống
                         </h2>
 
-                        <p className="text-sm mt-2">
+                        <p className="text-sm mt-2 text-slate-500 dark:text-slate-400">
                             Hiện không có sản phẩm nào trong giỏ hàng
                         </p>
 
@@ -414,6 +432,7 @@ export default function Cart() {
                             Lướt xem sản phẩm
                         </Link>
                     </div>
+                    </FadeIn>
                 )}
             </div>
         </div>

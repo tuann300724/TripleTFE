@@ -30,7 +30,7 @@ export default function ProfileInfo({
                             name="fullName"
                             value={userData.fullName}
                             onChange={handleInputChange}
-                            className="tt-input bg-white dark:bg-slate-900 w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                            className="tt-input bg-white dark:bg-slate-900 w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                             placeholder="Nguyễn Văn A"
                             required
                         />
@@ -42,7 +42,7 @@ export default function ProfileInfo({
                             name="phone"
                             value={userData.phone}
                             onChange={handleInputChange}
-                            className="tt-input bg-white dark:bg-slate-900 w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                            className="tt-input bg-white dark:bg-slate-900 w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                             placeholder="0987 654 321"
                             required
                         />
@@ -56,7 +56,7 @@ export default function ProfileInfo({
                             type="email"
                             value={userData.email}
                             readOnly
-                            className="tt-input bg-slate-50 dark:bg-slate-900 cursor-not-allowed border-slate-200/60 text-slate-400 w-full px-4 py-2.5 rounded-xl"
+                            className="tt-input bg-slate-50 dark:bg-slate-900 cursor-not-allowed border-slate-200/60 dark:border-slate-700 text-slate-400 dark:text-slate-500 w-full px-4 py-2.5 rounded-xl"
                             disabled
                             title="Email đăng nhập không thể thay đổi"
                         />
@@ -70,7 +70,7 @@ export default function ProfileInfo({
                         <select
                             value={selectedProvince}
                             onChange={(e) => setSelectedProvince(e.target.value)}
-                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500"
                         >
                             <option value="">-- Chọn Tỉnh / Thành phố --</option>
                             {provinces.map((p) => (
@@ -81,7 +81,7 @@ export default function ProfileInfo({
                             value={selectedDistrict}
                             onChange={(e) => setSelectedDistrict(e.target.value)}
                             disabled={!selectedProvince}
-                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed"
+                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed"
                         >
                             <option value="">-- Chọn Quận / Huyện --</option>
                             {districts.map((d) => (
@@ -92,7 +92,7 @@ export default function ProfileInfo({
                             value={selectedWard}
                             onChange={(e) => setSelectedWard(e.target.value)}
                             disabled={!selectedDistrict}
-                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed"
+                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed"
                         >
                             <option value="">-- Chọn Phường / Xã --</option>
                             {wards.map((w) => (
@@ -106,7 +106,7 @@ export default function ProfileInfo({
                         value={detailAddress}
                         onChange={(e) => setDetailAddress(e.target.value)}
                         disabled={!selectedWard}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100 dark:disabled:bg-slate-800/50 disabled:cursor-not-allowed"
                     />
                 </div>
 
@@ -120,7 +120,7 @@ export default function ProfileInfo({
                     </button>
                     <button
                         type="submit"
-                        className="tt-btn-primary bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm shadow-md transition-all duration-200"
+                        className="tt-btn-primary bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6 py-2.5 rounded-xl text-sm shadow-md transition-all duration-200"
                     >
                         Lưu thay đổi
                     </button>

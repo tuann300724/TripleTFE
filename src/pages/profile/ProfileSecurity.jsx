@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../../config";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function ProfileSecurity() {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [pwdData, setPwdData] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
     const [pwdMessage, setPwdMessage] = useState({ type: "", text: "" });
@@ -26,14 +29,19 @@ export default function ProfileSecurity() {
         e.preventDefault();
         setPwdMessage({ type: "", text: "" });
 
+        if (!user?.userId) {
+            setPwdMessage({ type: "error", text: "Vui lòng đăng nhập để thực hiện chức năng này." });
+            return;
+        }
+
         if (pwdData.newPassword !== pwdData.confirmPassword) {
             setPwdMessage({ type: "error", text: "Mật khẩu xác nhận mới không trùng khớp!" });
             return;
         }
 
         try {
-            const userId = localStorage.getItem("userId") || 6;
-            const response = await fetch(`https://localhost:7147/api/User/${userId}/change-password`, {
+            const userId = user?.userId;
+            const response = await fetch(API_BASE + `/User/${userId}/change-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -60,10 +68,8 @@ export default function ProfileSecurity() {
             setPwdData({ oldPassword: "", newPassword: "", confirmPassword: "" });
 
             setTimeout(() => {
-                // 2. Xóa sạch dữ liệu đăng nhập cũ lưu trong localStorage / sessionStorage
-                localStorage.removeItem("userId");
-                localStorage.removeItem("token"); // Nếu bạn có xài JWT Token
-                localStorage.clear(); // Hoặc xóa hết cho chắc chắn
+                // 2. Xóa sạch dữ liệu đăng nhập cũ lưu trong localStorage
+                localStorage.removeItem("user");
 
                 // 3. Đẩy user về trang login (thay "/login" bằng đường dẫn route login thực tế của bạn)
                 navigate("/login");
@@ -111,7 +117,7 @@ export default function ProfileSecurity() {
                             <button
                                 type="button"
                                 onClick={() => toggleShowPassword('old')}
-                                className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm focus:outline-none select-none"
+                                className="absolute right-3 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 text-sm focus:outline-none select-none transition-colors duration-200"
                             >
                                 {showPassword.old ? "👁️" : "🙈"}
                             </button>
@@ -133,7 +139,7 @@ export default function ProfileSecurity() {
                             <button
                                 type="button"
                                 onClick={() => toggleShowPassword('new')}
-                                className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm focus:outline-none select-none"
+                                className="absolute right-3 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 text-sm focus:outline-none select-none transition-colors duration-200"
                             >
                                 {showPassword.new ? "👁️" : "🙈"}
                             </button>
@@ -155,7 +161,7 @@ export default function ProfileSecurity() {
                             <button
                                 type="button"
                                 onClick={() => toggleShowPassword('confirm')}
-                                className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm focus:outline-none select-none"
+                                className="absolute right-3 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 text-sm focus:outline-none select-none transition-colors duration-200"
                             >
                                 {showPassword.confirm ? "👁️" : "🙈"}
                             </button>

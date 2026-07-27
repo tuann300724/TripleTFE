@@ -9,11 +9,11 @@ const getStatusDetails = (status) => {
                 className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse',
                 dotClass: 'bg-amber-500'
             };
-        case 'Processing':
+        case 'processing':
             return {
-                name: 'Chờ xử lý',
-                className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse',
-                dotClass: 'bg-amber-500'
+                name: 'Đang xử lý',
+                className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 animate-pulse',
+                dotClass: 'bg-blue-500'
             };
         case 'shipping':
             return {
@@ -75,7 +75,7 @@ export default function ProfileOrders({ orders }) {
             {/* List Đơn Hàng */}
             <div className="space-y-4">
                 {currentOrders.length === 0 ? (
-                    <div className="text-center py-10 text-slate-400 border border-dashed rounded-2xl">Bạn chưa có đơn hàng nào.</div>
+                        <div className="text-center py-10 text-slate-400 dark:text-slate-500 border border-dashed rounded-2xl dark:border-slate-700">Bạn chưa có đơn hàng nào.</div>
                 ) : (
                     currentOrders.map((order) => {
                         const statusInfo = getStatusDetails(order.orderStatus);
@@ -149,8 +149,8 @@ export default function ProfileOrders({ orders }) {
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
                         className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${currentPage === 1
-                            ? "text-slate-300 bg-slate-50 cursor-not-allowed border-slate-200"
-                            : "text-slate-700 border-slate-200 hover:bg-slate-50 active:scale-95"
+                            ? "text-slate-300 dark:text-slate-600 bg-slate-50 dark:bg-slate-800 cursor-not-allowed border-slate-200 dark:border-slate-700"
+                            : "text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95"
                             }`}
                     >
                         ⬅ Trực diện trước
@@ -164,8 +164,8 @@ export default function ProfileOrders({ orders }) {
                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                         disabled={currentPage === totalPages}
                         className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${currentPage === totalPages
-                            ? "text-slate-300 bg-slate-50 cursor-not-allowed border-slate-200"
-                            : "text-slate-700 border-slate-200 hover:bg-slate-50 active:scale-95"
+                            ? "text-slate-300 dark:text-slate-600 bg-slate-50 dark:bg-slate-800 cursor-not-allowed border-slate-200 dark:border-slate-700"
+                            : "text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95"
                             }`}
                     >
                         Tiếp sau ➡

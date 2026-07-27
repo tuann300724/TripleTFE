@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Package, Plus, Loader2, Edit, ChevronLeft, ChevronRight, ChevronDown, Filter } from "lucide-react";
-import AdminSidebar from "./components/AdminSidebar";
+import { API_BASE } from "../config";
+import { useToast } from "../components/Toast";
+
 
 export default function Product() {
     const columns = ["Hình ảnh", "Sản phẩm", "Thương hiệu / Danh mục", "Giá bán", "Trạng thái", "Thao tác"];
+    const toast = useToast();
     
     // --- STATE QUẢN LÝ DỮ LIỆU VÀ BỘ LỌC ---
     const [products, setProducts] = useState([]);
@@ -19,7 +22,7 @@ export default function Product() {
 
     // --- FETCH DATA TỪ API PRODUCTS ---
     useEffect(() => {
-        fetch("https://localhost:7147/api/Products")
+        fetch(API_BASE + "/Products")
             .then((res) => {
                 if (!res.ok) throw new Error("Không thể tải danh sách sản phẩm!");
                 return res.json();
@@ -69,7 +72,7 @@ export default function Product() {
         try {
             setOpenStatusDropdownId(null);
             const response = await fetch(
-                `https://localhost:7147/api/Products/change-status/${productId}?status=${newStatus}`,
+                API_BASE + `/Products/change-status/${productId}?status=${newStatus}`,
                 {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" }
@@ -84,14 +87,12 @@ export default function Product() {
                 )
             );
         } catch (err) {
-            alert(err.message || "Gặp lỗi khi xử lý đổi trạng thái!");
+            toast(err.message || "Gặp lỗi khi xử lý đổi trạng thái!", "error");
         }
     };
 
     return (
-        <div className="flex bg-slate-50 dark:bg-slate-900 min-h-screen">
-            <AdminSidebar />
-            <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0">
                 <div className="p-6">
                     
                     {/* Hero section */}
@@ -107,7 +108,7 @@ export default function Product() {
                             </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            <a href="/admin/products/new" className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 flex items-center gap-2">
+                            <a href="/admin/products/new" className="tt-btn-primary text-sm px-4 py-2 flex items-center gap-2">
                                 <Plus className="h-4 w-4" /> Thêm sản phẩm
                             </a>
                         </div>
@@ -151,7 +152,7 @@ export default function Product() {
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-800">
                                     {isLoading && (
                                         <tr>
-                                            <td colSpan={columns.length} className="px-4 py-10 text-center text-slate-500">
+                                            <td colSpan={columns.length} className="px-4 py-10 text-center text-slate-500 dark:text-slate-400">
                                                 <div className="flex items-center justify-center gap-2 text-sm font-medium">
                                                     <Loader2 className="h-5 w-5 animate-spin text-emerald-600" /> Đang tải danh sách...
                                                 </div>
@@ -297,6 +298,5 @@ export default function Product() {
                     </div>
                 </div>
             </div>
-        </div>
     );
 }

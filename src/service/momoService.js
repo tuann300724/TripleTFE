@@ -1,12 +1,12 @@
-import axios from "axios";
+import api from "./api";
 
 export const createMomoPayment = async (orderId, amount) => {
     try {
         // Chuẩn hóa orderInfo: viết liền không dấu, không khoảng trắng để chống lỗi chữ ký tuyệt đối
         const cleanOrderInfo = `Thanh-toan-don-hang-${orderId}`;
 
-        const res = await axios.post(
-            "https://localhost:7147/api/Momo/create-momo",
+        const res = await api.post(
+            "/Momo/create-momo",
             {
                 orderId: String(orderId),
                 amount: Number(amount), // 🔥 BẮT BUỘC ĐỔI THÀNH SỐ (Number) để khớp với kiểu long của Backend C#

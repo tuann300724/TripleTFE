@@ -1,6 +1,9 @@
 import NewsCard from "../components/NewsCard";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { API_BASE } from "../config";
+import { FadeIn } from "../components/Animate";
+import Breadcrumb from "../components/Breadcrumb";
 
 export default function News() {
     const navigate = useNavigate();
@@ -14,15 +17,9 @@ export default function News() {
         return date.toLocaleDateString("vi-VN");
     };
 
-    // Hàm cắt ngắn nội dung bài viết làm đoạn trích (Excerpt)
-    const getExcerpt = (text, maxLength = 100) => {
-        if (!text) return "";
-        return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
-    };
-
     useEffect(() => {
         // Gọi API lấy toàn bộ danh sách tin tức
-        fetch("https://localhost:7147/api/News")
+        fetch(API_BASE + "/News")
             .then((res) => {
                 if (!res.ok) {
                     throw new Error("Không thể lấy dữ liệu từ server");
@@ -56,7 +53,8 @@ export default function News() {
         <div>
             {/* Hero Section */}
             <section className="tt-hero bg-slate-900 text-white py-16 px-6 md:px-12">
-                <div className="mx-auto max-w-6xl">
+                <FadeIn>
+                    <div className="mx-auto max-w-6xl">
                     <span className="text-sm font-semibold uppercase tracking-widest text-emerald-400">
                         Tin tức
                     </span>
@@ -65,13 +63,15 @@ export default function News() {
                         Tin giải đấu, đánh giá sản phẩm, mẹo kỹ thuật và khuyến mãi mới nhất từ TripleT
                         Badminton.
                     </p>
-                </div>
+                    <Breadcrumb items={[{ label: "Tin tức" }]} />
+                    </div>
+                </FadeIn>
             </section>
 
             {/* Thân trang hiển thị danh sách tin tức */}
             <section className="mx-auto max-w-6xl px-6 py-12 md:px-12">
                 {news.length === 0 ? (
-                    <div className="text-center text-slate-400 py-10">
+                    <div className="text-center text-slate-400 dark:text-slate-500 py-10">
                         Hiện chưa có bài viết nào được đăng tải.
                     </div>
                 ) : (
@@ -81,7 +81,7 @@ export default function News() {
                             <div className="mt-10">
                                 <div
                                     onClick={() => navigate(`/news/${featured.newsId}`)}
-                                    className="block cursor-pointer transition-transform hover:-translate-y-1"
+                                    className="block cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-lg"
                                 >
                                     <NewsCard
                                         article={{
@@ -99,12 +99,13 @@ export default function News() {
                         )}
 
                         {/* Danh sách các bài viết còn lại (Grid Cards) */}
-                        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                        <FadeIn delay={100}>
+                            <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                             {rest.map((article) => (
                                 <div
                                     onClick={() => navigate(`/news/${article.newsId}`)}
                                     key={article.newsId}
-                                    className="block cursor-pointer transition-transform hover:-translate-y-1"
+                                    className="block cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-lg"
                                 >
                                     <NewsCard
                                         article={{
@@ -118,7 +119,8 @@ export default function News() {
                                     />
                                 </div>
                             ))}
-                        </div>
+                            </div>
+                        </FadeIn>
                     </>
                 )}
             </section>

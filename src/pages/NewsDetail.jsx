@@ -1,5 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { API_BASE } from "../config";
+import Breadcrumb from "../components/Breadcrumb";
 
 export default function NewsDetail() {
     const { id } = useParams();
@@ -15,7 +17,7 @@ export default function NewsDetail() {
 
     useEffect(() => {
         // Gọi API lấy chi tiết tin tức theo ID
-        fetch(`https://localhost:7147/api/News/${id}`)
+        fetch(API_BASE + `/News/${id}`)
             .then((res) => {
                 if (!res.ok) throw new Error("Không tìm thấy bài viết");
                 return res.json();
@@ -42,7 +44,7 @@ export default function NewsDetail() {
         return (
             <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 sm:px-6">
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200">Không tìm thấy bài viết</h1>
-                <p className="text-slate-500 mt-2 text-center text-sm sm:text-base">Bài viết này không tồn tại hoặc đã bị xóa khỏi hệ thống.</p>
+                <p className="text-slate-500 dark:text-slate-400 mt-2 text-center text-sm sm:text-base">Bài viết này không tồn tại hoặc đã bị xóa khỏi hệ thống.</p>
                 <Link to="/news" className="mt-6 inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-emerald-500 rounded-xl hover:bg-emerald-600 transition-colors shadow-md">
                     Quay lại trang tin tức
                 </Link>
@@ -59,6 +61,8 @@ export default function NewsDetail() {
                 </svg>
                 Quay lại danh sách
             </Link>
+
+            <Breadcrumb items={[{ to: "/news", label: "Tin tức" }, { label: article?.title || "" }]} />
 
             {/* Tiêu đề & Thông tin bài viết */}
             <header className="mb-6 sm:mb-8">

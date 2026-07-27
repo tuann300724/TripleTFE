@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { Users, Loader2, Edit, Trash2, Search } from "lucide-react";
-import AdminSidebar from "./components/AdminSidebar";
-import AdminHeader from "./components/AdminHeader";
+import { useState, useEffect } from "react";
+import { Users, Loader2, Edit, Search } from "lucide-react";
+import { API_BASE } from "../config";
+
 
 export default function User() {
     const columns = ["Người dùng", "Email", "Vai trò", "Thao tác"];
@@ -17,7 +17,7 @@ export default function User() {
 
     // --- FETCH DATA TỪ API USER ---
     useEffect(() => {
-        fetch("https://localhost:7147/api/User")
+        fetch(API_BASE + "/User")
             .then((res) => {
                 if (!res.ok) throw new Error("Không thể tải danh sách tài khoản người dùng!");
                 return res.json();
@@ -49,28 +49,8 @@ export default function User() {
         return matchSearch && matchRole;
     });
 
-    // --- HÀM XỬ LÝ XÓA NGƯỜI DÙNG ---
-    const handleDeleteUser = async (userId) => {
-        if (window.confirm("Bạn có chắc chắn muốn xóa tài khoản người dùng này không?")) {
-            try {
-                const response = await fetch(`https://localhost:7147/api/User/${userId}`, {
-                    method: "DELETE",
-                });
-                if (!response.ok) throw new Error("Xóa tài khoản người dùng thất bại!");
-                
-                // Cập nhật State xóa trực tiếp trên giao diện UI
-                setUsers(users.filter((u) => u.userId !== userId));
-                alert("Đã xóa tài khoản thành công!");
-            } catch (err) {
-                alert(err.message);
-            }
-        }
-    };
-
     return (
-        <div className="flex bg-slate-50 dark:bg-slate-900 min-h-screen">
-            <AdminSidebar />
-            <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0">
                
                 <div className="p-6 space-y-6 max-w-7xl mx-auto">
                     
@@ -89,7 +69,7 @@ export default function User() {
                             </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            <button className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700">
+                            <button className="tt-btn-primary text-sm px-4 py-2">
                                 Thêm tài khoản
                             </button>
                         </div>
@@ -199,7 +179,7 @@ export default function User() {
                                                                 <img 
                                                                     src={avatar} 
                                                                     alt={fullName} 
-                                                                    className="h-9 w-9 rounded-full object-cover border border-slate-200"
+                                                                    className="h-9 w-9 rounded-full object-cover border border-slate-200 dark:border-slate-600"
                                                                     onError={(e) => { e.target.style.display = 'none'; }}
                                                                 />
                                                             ) : (
@@ -257,6 +237,5 @@ export default function User() {
                     </div>
                 </div>
             </div>
-        </div>
     );
 }

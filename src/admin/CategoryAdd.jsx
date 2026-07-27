@@ -1,10 +1,13 @@
 import { FolderPlus, ArrowLeft } from "lucide-react";
-import AdminSidebar from "./components/AdminSidebar";
+import { API_BASE } from "../config";
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../components/Toast";
 
 export default function CategoryAdd() {
     const navigate = useNavigate();
+    const toast = useToast();
     
     // Khởi tạo state cho Form
     const [categoryName, setCategoryName] = useState("");
@@ -14,13 +17,13 @@ export default function CategoryAdd() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!categoryName.trim()) {
-            alert("Vui lòng điền tên danh mục!");
+            toast("Vui lòng điền tên danh mục!", "error");
             return;
         }
 
         setSubmitting(true);
         try {
-            const response = await fetch("https://localhost:7147/api/Categories", {
+            const response = await fetch(API_BASE + "/Categories", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -35,19 +38,17 @@ export default function CategoryAdd() {
                 throw new Error("Không thể thêm danh mục mới");
             }
 
-            alert("Thêm danh mục mới thành công!");
+            toast("Thêm danh mục mới thành công!", "success");
             navigate("/admin/categories"); // Quay lại trang danh sách
         } catch (err) {
-            alert(err.message);
+            toast(err.message, "error");
         } finally {
             setSubmitting(false);
         }
     };
 
     return (
-        <div className="flex">
-            <AdminSidebar />
-            <div className="flex-1">
+        <div className="flex-1">
                 <div className="p-6">
                     {/* Header section */}
                     <div className="mb-6 flex items-center justify-between">
@@ -109,7 +110,7 @@ export default function CategoryAdd() {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
+                                    className="tt-btn-primary text-sm px-5 py-2 disabled:opacity-50"
                                 >
                                     {submitting ? "Đang lưu..." : "Xác nhận thêm"}
                                 </button>
@@ -118,6 +119,5 @@ export default function CategoryAdd() {
                     </div>
                 </div>
             </div>
-        </div>
     );
 }

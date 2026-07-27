@@ -1,7 +1,9 @@
 import { FolderTree } from "lucide-react";
-import AdminSidebar from "./components/AdminSidebar";
+import { API_BASE } from "../config";
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../components/Toast";
 
 // Hàm hỗ trợ tạo slug đơn giản từ tên danh mục
 const convertToSlug = (text) => {
@@ -17,6 +19,7 @@ const convertToSlug = (text) => {
 export default function Category() {
     // Đổi tiêu đề cột thành cụ thể để tương thích trực quan hơn
     const columns = ["Tên danh mục", "Slug", "Thao tác"];
+    const toast = useToast();
 
     // 1. Khởi tạo state lưu trữ danh sách danh mục và trạng thái tải dữ liệu
     const [categories, setCategories] = useState([]);
@@ -27,7 +30,7 @@ export default function Category() {
     // 2. Hàm gọi API lấy dữ liệu (được tách ra để gọi lại sau khi xóa thành công)
     const fetchCategories = async () => {
         try {
-            const response = await fetch("https://localhost:7147/api/Categories");
+            const response = await fetch(API_BASE + "/Categories");
             if (!response.ok) {
                 throw new Error("Không thể lấy dữ liệu từ server");
             }
@@ -51,7 +54,7 @@ export default function Category() {
         if (!confirmDelete) return;
 
         try {
-            const response = await fetch(`https://localhost:7147/api/Categories/${cat.categoryId}`, {
+            const response = await fetch(API_BASE + `/Categories/${cat.categoryId}`, {
                 method: "DELETE",
             });
 
@@ -65,19 +68,17 @@ export default function Category() {
             }
 
             // Xóa thành công
-            alert("Xóa danh mục thành công!");
+            toast("Xóa danh mục thành công!", "success");
             fetchCategories(); 
 
         } catch (err) {
             // Hiển thị thông báo lỗi thân thiện được bắt ở trên
-            alert(err.message);
+            toast(err.message, "error");
         }
     };
 
     return (
-        <div className="flex">
-            <AdminSidebar />
-            <div className="flex-1">
+        <div className="flex-1">
                 <div className="p-6">
                     {/* Hero section */}
                     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -94,7 +95,7 @@ export default function Category() {
                         <div className="flex flex-wrap gap-2">
                             <button
                                 onClick={() => navigate("/admin/categories/add")}
-                                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
+                                className="tt-btn-primary text-sm px-4 py-2"
                             >
                                 Thêm danh mục
                             </button>
@@ -120,7 +121,7 @@ export default function Category() {
                                         </tr>
                                     ) : error ? (
                                         <tr>
-                                            <td colSpan={columns.length} className="px-4 py-6 text-center text-red-500 font-medium">{error}</td>
+                                            <td colSpan={columns.length} className="px-4 py-6 text-center text-red-500 dark:text-red-400 font-medium">{error}</td>
                                         </tr>
                                     ) : categories.length === 0 ? (
                                         <tr>
@@ -166,6 +167,5 @@ export default function Category() {
                     </div>
                 </div>
             </div>
-        </div>
     );
 }

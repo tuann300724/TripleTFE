@@ -1,18 +1,25 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import api from "../service/api";
 import { createMomoPayment } from "../service/momoService";
+import CheckoutProgress from "./checkout/CheckoutProgress";
+import Breadcrumb from "../components/Breadcrumb";
+import ShippingForm from "./checkout/ShippingForm";
+import PaymentMethod from "./checkout/PaymentMethod";
+import InvoiceSummary from "./checkout/InvoiceSummary";
+import { FadeIn } from "../components/Animate";
+import { useToast } from "../components/Toast";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Checkout() {
     const navigate = useNavigate();
-
-    const [user] = useState(() =>
-        JSON.parse(localStorage.getItem("user"))
-    );
+    const toast = useToast();
+    const { user } = useAuth();
 
     const [invoiceItems, setInvoiceItems] = useState([]);
     const [paymentMethod, setPaymentMethod] = useState("cod");
 
+    const [loading, setLoading] = useState(true);
     const [receiverName, setReceiverName] = useState("");
     const [receiverPhone, setReceiverPhone] = useState("");
     const [receiverEmail, setReceiverEmail] = useState("");
@@ -22,19 +29,26 @@ export default function Checkout() {
     // LOAD USER INFO
     // =========================
     useEffect(() => {
-        if (!user?.userId) return;
+        if (!user?.userId) {
+            setLoading(false);
+            return;
+        }
 
         const loadUserInfo = async () => {
-            const res = await axios.get(
-                "https://localhost:7147/api/UserProfile/" + user.userId
-            );
+            try {
+                const res = await api.get(
+                    "/UserProfile/" + user.userId
+                );
 
-            const u = res.data;
+                const u = res.data;
 
-            setReceiverName(u.fullName || "");
-            setReceiverPhone(u.phone || "");
-            setReceiverEmail(u.user.email || "");
-            setShippingAddress(u.address || "");
+                setReceiverName(u.fullName || "");
+                setReceiverPhone(u.phone || "");
+                setReceiverEmail(u.email || "");
+                setShippingAddress(u.address || "");
+            } catch {
+                // silent
+            }
         };
 
         loadUserInfo();
@@ -44,53 +58,64 @@ export default function Checkout() {
     // LOAD CART
     // =========================
     useEffect(() => {
-        if (!user) return;
+        if (!user) {
+            setLoading(false);
+            return;
+        }
 
         const loadCheckout = async () => {
             try {
-                const cartRes = await axios.get(
-                    "https://localhost:7147/api/Carts"
+                const cartRes = await api.get(
+                    "/Carts"
                 );
 
                 const userCart = cartRes.data.find(
                     (c) => c.userId === user.userId
                 );
 
-                if (!userCart) return;
+                if (!userCart?.cartItems || userCart.cartItems.length === 0) {
+                    setLoading(false);
+                    return;
+                }
 
                 const items = await Promise.all(
                     userCart.cartItems.map(async (item) => {
-                        const variantRes = await axios.get(
-                            `https://localhost:7147/api/ProductVariants/${item.variantId}`
-                        );
+                        try {
+                            const variantRes = await api.get(
+                                `/ProductVariants/${item.variantId}`
+                            );
 
-                        const variant = variantRes.data;
+                            const variant = variantRes.data;
 
-                        const productRes = await axios.get(
-                            `https://localhost:7147/api/Products/${variant.productId}`
-                        );
+                            const productRes = await api.get(
+                                `/Products/${variant.productId}`
+                            );
 
-                        const product = productRes.data;
+                            const product = productRes.data;
 
-                        return {
-                            ...item,
-                            name: product.productName,
-                            image: product.thumbnail,
-                            price: variant.price,
-                            selectedColor: variant.color,
-                            selectedSize: variant.size,
-                        };
+                            return {
+                                ...item,
+                                name: product.productName,
+                                image: product.thumbnail,
+                                price: variant.price,
+                                selectedColor: variant.color,
+                                selectedSize: variant.size,
+                            };
+                        } catch {
+                            return null;
+                        }
                     })
                 );
 
-                setInvoiceItems(items);
-            } catch (err) {
-                console.log(err);
+                setInvoiceItems(items.filter(Boolean));
+                setLoading(false);
+            } catch {
+                setLoading(false);
             }
         };
 
         loadCheckout();
-    }, []);
+    }, [user]);
 
     // =========================
     // TOTAL
@@ -118,14 +143,14 @@ export default function Checkout() {
             !receiverEmail.trim() ||
             !shippingAddress.trim()
         ) {
-            alert("Vui lòng nhập đầy đủ thông tin");
+            toast("Vui lòng nhập đầy đủ thông tin", "error");
             return;
         }
 
         try {
             // ================= 1. TẠO ORDER TRÊN BACKEND =================
-            const orderRes = await axios.post(
-                "https://localhost:7147/api/Orders",
+            const orderRes = await api.post(
+                "/Orders",
                 {
                     userId: user.userId,
                     orderStatus: "Pending",
@@ -137,8 +162,8 @@ export default function Checkout() {
 
             // ================= 2. TẠO CHI TIẾT ĐƠN HÀNG =================
             for (const item of invoiceItems) {
-                await axios.post(
-                    "https://localhost:7147/api/OrderDetails",
+                await api.post(
+                    "/OrderDetails",
                     {
                         orderId: order.orderId,
                         variantId: item.variantId,
@@ -152,8 +177,8 @@ export default function Checkout() {
             }
 
             // ================= 3. TẠO TRẠNG THÁI THANH TOÁN =================
-            await axios.post(
-                "https://localhost:7147/api/Payments",
+            await api.post(
+                "/Payments",
                 {
                     orderId: order.orderId,
                     amount: total,
@@ -164,6 +189,12 @@ export default function Checkout() {
 
             // ================= 4. XỬ LÝ LUỒNG MOMO THẬT =================
             if (paymentMethod === "momo") {
+
+                // Xóa cart items trước khi redirect MoMo
+                for (const item of invoiceItems) {
+                    await api.delete(`/CartItems/${item.cartItemId}`).catch(() => {});
+                }
+
                 // Đóng gói dữ liệu State để cất vào localStorage
                 const successStateForMomo = {
                     order,
@@ -188,27 +219,24 @@ export default function Checkout() {
                         ? JSON.parse(momoRes)
                         : momoRes;
 
-                console.log("MOMO RESPONSE PROCESSING:", data);
-
                 // Chuyển hướng trình duyệt sang MoMo Real
                 if (data?.payUrl) {
                     window.location.href = data.payUrl;
                     return;
                 }
 
-                alert("Không tạo được link MoMo");
-                console.error(data);
+                toast("Không tạo được link MoMo", "error");
                 return;
             }
 
             // ================= 5. XỬ LÝ LUỒNG COD TRUYỀN THỐNG =================
             for (const item of invoiceItems) {
-                await axios.delete(
-                    `https://localhost:7147/api/CartItems/${item.cartItemId}`
+                await api.delete(
+                    `/CartItems/${item.cartItemId}`
                 );
             }
 
-            alert("Đặt hàng thành công");
+            toast("Đặt hàng thành công", "success");
 
             navigate("/success", {
                 state: {
@@ -225,304 +253,63 @@ export default function Checkout() {
 
         } catch (err) {
             console.log(err);
-            alert("Đặt hàng thất bại");
+            toast("Đặt hàng thất bại", "error");
         }
     };
 
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-20 min-h-screen bg-slate-50 dark:bg-[#0c1219]">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+            </div>
+        );
+    }
 
     return (
         <div className="bg-slate-50 dark:bg-[#0c1219] py-12 transition-colors duration-300 min-h-screen">
 
             <div className="mx-auto max-w-6xl px-6 md:px-12">
 
-                {/* Visual Progress Steps */}
-                <div className="flex justify-center items-center mb-10 max-w-md mx-auto">
+                <Breadcrumb items={[{ to: "/cart", label: "Giỏ hàng" }, { label: "Thanh toán" }]} />
 
-                    <div className="flex items-center text-slate-400 dark:text-slate-500">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-bold">
-                            1
-                        </span>
-                        <span className="ml-2 text-xs font-semibold hidden sm:inline">
-                            Giỏ hàng
-                        </span>
-                    </div>
-
-                    <div className="flex-1 h-0.5 bg-slate-200 dark:bg-slate-800 mx-4"></div>
-
-                    <div className="flex items-center text-emerald-500 font-bold">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-xs text-white">
-                            2
-                        </span>
-                        <span className="ml-2 text-xs hidden sm:inline">
-                            Thanh toán
-                        </span>
-                    </div>
-
-                    <div className="flex-1 h-0.5 bg-slate-200 dark:bg-slate-800 mx-4"></div>
-
-                    <div className="flex items-center text-slate-400 dark:text-slate-500">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-bold">
-                            3
-                        </span>
-                        <span className="ml-2 text-xs hidden sm:inline">
-                            Thành công
-                        </span>
-                    </div>
-
-                </div>
+                <FadeIn>
+                    <CheckoutProgress />
+                </FadeIn>
 
                 <div className="grid gap-8 lg:grid-cols-12 items-start">
 
-                    {/* LEFT */}
                     <div className="lg:col-span-7 space-y-6">
-
-                        {/* SHIPPING */}
-                        <div className="tt-card p-6 md:p-8 space-y-4">
-
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
-                                Thông tin giao hàng
-                            </h2>
-
-                            <form
-                                className="grid gap-4 sm:grid-cols-2"
-                                onSubmit={(e) => e.preventDefault()}
-                            >
-
-                                <div className="sm:col-span-2 space-y-1">
-                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                        Họ và tên người nhận
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        required
-                                        value={receiverName}
-                                        onChange={(e) => setReceiverName(e.target.value)}
-                                        placeholder="Nguyễn Văn A"
-                                        className="tt-input"
-                                    />
-                                </div>
-
-                                <div className="space-y-1">
-                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                        Số điện thoại
-                                    </label>
-
-                                    <input
-                                        type="tel"
-                                        required
-                                        value={receiverPhone}
-                                        onChange={(e) => setReceiverPhone(e.target.value)}
-                                        placeholder="0987654321"
-                                        className="tt-input"
-                                    />
-                                </div>
-
-                                <div className="space-y-1">
-                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                        Email
-                                    </label>
-
-                                    <input
-                                        type="email"
-                                        required
-                                        value={receiverEmail}
-                                        onChange={(e) => setReceiverEmail(e.target.value)}
-                                        placeholder="name@example.com"
-                                        className="tt-input"
-                                    />
-                                </div>
-
-                                <div className="sm:col-span-2 space-y-1">
-                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                        Địa chỉ giao hàng
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        required
-                                        value={shippingAddress}
-                                        onChange={(e) => setShippingAddress(e.target.value)}
-                                        placeholder="Số nhà, tên đường..."
-                                        className="tt-input"
-                                    />
-                                </div>
-
-                            </form>
-                        </div>
-
-                        {/* PAYMENT */}
-                        <div className="tt-card p-6 md:p-8 space-y-6">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
-                                Phương thức thanh toán
-                            </h2>
-
-                            {/* COD */}
-                            <label className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === "cod"
-                                ? "border-emerald-500 bg-emerald-500/5"
-                                : "border-slate-200 dark:border-slate-800"
-                                }`}>
-                                <input
-                                    type="radio"
-                                    name="payment"
-                                    checked={paymentMethod === "cod"}
-                                    onChange={() => setPaymentMethod("cod")}
-                                    className="mt-1 h-4 w-4 text-emerald-500 focus:ring-0"
-                                />
-                                <div>
-                                    <span className="block font-bold text-sm text-slate-900 dark:text-white">
-                                        COD (Thanh toán khi nhận hàng)
-                                    </span>
-                                    <span className="block text-xs text-slate-400 mt-0.5">
-                                        Nhận hàng và thanh toán trực tiếp
-                                    </span>
-                                </div>
-                            </label>
-
-                            {/* MOMO */}
-                            <label className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === "momo"
-                                ? "border-pink-500 bg-pink-100/20"
-                                : "border-slate-200 dark:border-slate-800"
-                                }`}>
-                                <input
-                                    type="radio"
-                                    name="payment"
-                                    checked={paymentMethod === "momo"}
-                                    onChange={() => setPaymentMethod("momo")}
-                                    className="mt-1 h-4 w-4 text-pink-500 focus:ring-0"
-                                />
-                                <div>
-                                    <span className="block font-bold text-sm text-slate-900 dark:text-white">
-                                        Momo (Thanh toán qua ví Momo)
-                                    </span>
-                                    <span className="block text-xs text-slate-400 mt-0.5">
-                                        Quét mã QR hoặc thanh toán qua app Momo
-                                    </span>
-                                </div>
-                            </label>
-                        </div>
-
+                        <FadeIn>
+                            <ShippingForm
+                                receiverName={receiverName}
+                                setReceiverName={setReceiverName}
+                                receiverPhone={receiverPhone}
+                                setReceiverPhone={setReceiverPhone}
+                                receiverEmail={receiverEmail}
+                                setReceiverEmail={setReceiverEmail}
+                                shippingAddress={shippingAddress}
+                                setShippingAddress={setShippingAddress}
+                            />
+                        </FadeIn>
+                        <FadeIn delay={100}>
+                            <PaymentMethod
+                                paymentMethod={paymentMethod}
+                                setPaymentMethod={setPaymentMethod}
+                            />
+                        </FadeIn>
                     </div>
 
-                    {/* RIGHT */}
                     <div className="lg:col-span-5 space-y-6">
-
-                        <div className="tt-card p-6 md:p-8 space-y-4 shadow-xl border border-slate-200/50 dark:border-slate-800/50">
-
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
-                                Chi tiết hóa đơn
-                            </h2>
-
-                            {/* ITEMS */}
-                            <div className="divide-y divide-slate-100 dark:divide-slate-800/60 max-h-60 overflow-y-auto pr-2">
-
-                                {invoiceItems.map((item) => (
-
-                                    <div
-                                        key={item.cartItemId}
-                                        className="flex gap-4 py-3 items-center"
-                                    >
-
-                                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 bg-white">
-
-                                            <img
-                                                src={item.image}
-                                                alt={item.name}
-                                                className="h-full w-full object-cover"
-                                            />
-
-                                        </div>
-
-                                        <div className="flex-1 space-y-0.5">
-
-                                            <h4 className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">
-                                                {item.name}
-                                            </h4>
-
-                                            <p className="text-xs text-slate-400">
-                                                Phân loại:
-                                                {" "}
-                                                {item.selectedSize}
-                                                {" / "}
-                                                {item.selectedColor}
-                                            </p>
-
-                                            <div className="flex justify-between items-center text-xs">
-
-                                                <span className="text-slate-400">
-                                                    SL: {item.quantity}
-                                                </span>
-
-                                                <span className="font-semibold text-slate-700 dark:text-slate-300">
-                                                    {formatPrice(
-                                                        item.price * item.quantity
-                                                    )}
-                                                </span>
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-
-                                ))}
-
-                            </div>
-
-                            {/* TOTAL */}
-                            <div className="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-2 text-sm">
-
-                                <div className="flex justify-between text-slate-500 dark:text-slate-400">
-
-                                    <span>Tạm tính</span>
-
-                                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                                        {formatPrice(subtotal)}
-                                    </span>
-
-                                </div>
-
-                                <div className="flex justify-between text-slate-500 dark:text-slate-400">
-
-                                    <span>Phí giao hàng</span>
-
-                                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                                        Miễn phí
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-                            <div className="border-t border-slate-100 dark:border-slate-800 pt-4 flex justify-between items-baseline">
-
-                                <span className="text-base font-bold text-slate-900 dark:text-white">
-                                    Tổng cộng
-                                </span>
-
-                                <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
-                                    {formatPrice(total)}
-                                </span>
-
-                            </div>
-
-                            <button
-                                type="button"
-                                onClick={handlePlaceOrder}
-                                className="tt-btn-primary w-full py-4 shadow-lg shadow-emerald-500/20 font-bold tracking-wide mt-2"
-                            >
-                                Xác nhận thanh toán
-                            </button>
-
-                            <Link
-                                to="/cart"
-                                className="block text-center text-xs font-semibold text-emerald-500 hover:text-emerald-600 transition-colors pt-2"
-                            >
-                                Quay lại giỏ hàng chỉnh sửa
-                            </Link>
-
-                        </div>
-
+                        <FadeIn delay={150}>
+                            <InvoiceSummary
+                                invoiceItems={invoiceItems}
+                                subtotal={subtotal}
+                                total={total}
+                                formatPrice={formatPrice}
+                                onPlaceOrder={handlePlaceOrder}
+                            />
+                        </FadeIn>
                     </div>
 
                 </div>

@@ -47,7 +47,7 @@ export default function AdminCourt() {
         <div className="space-y-6">
             {toast && (
                 <div
-                    className={`fixed top-5 right-5 z-50 flex items-center gap-3 rounded-2xl px-5 py-3 text-sm font-semibold shadow-xl ${
+                    className={`fixed top-5 right-5 z-50 flex items-center gap-3 rounded-2xl px-5 py-3 text-sm font-semibold shadow-xl transition-all duration-300 opacity-100 ${
                         toast.type === "success" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"
                     }`}
                 >
@@ -197,7 +197,7 @@ export default function AdminCourt() {
                                             <div className="flex items-center justify-end gap-2">
                                                 <Link
                                                     to={`/admin/courts/${court.courtId}`}
-                                                    className="flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-all hover:bg-emerald-100 dark:border-emerald-800/50 dark:bg-emerald-900/20 dark:text-emerald-400"
+                                                    className="tt-btn-primary gap-1.5 px-3 py-1.5 text-xs"
                                                 >
                                                     <Eye className="h-3.5 w-3.5" />
                                                     Xem chi tiết sân
@@ -215,7 +215,7 @@ export default function AdminCourt() {
                                                         onClick={() =>
                                                             showToast("Đã phê duyệt sân (giao diện demo)", "success")
                                                         }
-                                                        className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm"
+                                                        className="tt-btn-primary gap-1.5 px-3 py-1.5 text-xs"
                                                     >
                                                         <CheckCircle className="h-3.5 w-3.5" />
                                                         Duyệt

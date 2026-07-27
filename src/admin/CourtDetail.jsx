@@ -11,6 +11,7 @@ import {
     Timer,
     User,
     XCircle,
+    Target
 } from "lucide-react";
 import { getCourtById, formatCourtDate, formatCourtPrice, formatTime } from "./data/mockCourts";
 
@@ -21,7 +22,7 @@ export default function CourtDetail() {
     if (!court) {
         return (
             <div className="py-20 text-center">
-                <p className="text-5xl">🏸</p>
+                <p className="text-5xl"><Target className="h-12 w-12 mx-auto" /></p>
                 <h1 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">Không tìm thấy sân</h1>
                 <Link to="/admin/courts" className="mt-6 inline-flex rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white">
                     Quay lại danh sách

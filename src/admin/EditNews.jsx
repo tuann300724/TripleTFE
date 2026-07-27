@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
-import AdminSidebar from "./components/AdminSidebar";
-import axios from "axios"; // Sử dụng axios đồng bộ hiệu năng gửi file
+import api from "../service/api";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
+import { useToast } from "../components/Toast";
 
 
 export default function EditNews() {
     const { id } = useParams(); 
     const navigate = useNavigate();
+    const toast = useToast();
     
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
@@ -32,7 +33,7 @@ export default function EditNews() {
 
     // 1. Tải thông tin bài viết cũ đổ vào Form khi mở trang
     useEffect(() => {
-        axios.get(`https://localhost:7147/api/News/${id}`)
+        api.get(`/News/${id}`)
             .then((response) => {
                 const data = response.data;
                 setTitle(data.title || "");
@@ -41,7 +42,7 @@ export default function EditNews() {
             })
             .catch((err) => {
                 console.error("Lỗi lấy chi tiết bài viết:", err);
-                alert("Không tìm thấy hoặc không thể lấy dữ liệu bài viết này!");
+                toast("Không tìm thấy hoặc không thể lấy dữ liệu bài viết này!", "error");
                 navigate("/admin/news");
             })
             .finally(() => setLoading(false));
@@ -60,7 +61,7 @@ export default function EditNews() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!title.trim() || !content.trim() || content === "<p><br></p>") {
-            alert("Tiêu đề và nội dung không được bỏ trống!");
+            toast("Tiêu đề và nội dung không được bỏ trống!", "error");
             return;
         }
 
@@ -80,16 +81,16 @@ export default function EditNews() {
 
         try {
             // Gửi request PUT lên endpoint API
-            const response = await axios.put(`https://localhost:7147/api/News/${id}`, formData);
+            const response = await api.put(`/News/${id}`, formData);
 
             if (response.status === 200 || response.status === 204) {
-                alert("Cập nhật bài viết thành công!");
+                toast("Cập nhật bài viết thành công!", "success");
                 navigate("/admin/news");
             }
         } catch (error) {
             console.error("Lỗi cập nhật bài viết:", error);
             const serverError = error.response?.data?.errors || error.response?.data || error.message;
-            alert("Cập nhật thất bại: " + JSON.stringify(serverError));
+            toast("Cập nhật thất bại: " + JSON.stringify(serverError), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -97,17 +98,12 @@ export default function EditNews() {
 
     if (loading) {
         return (
-            <div className="flex">
-                <AdminSidebar />
-                <div className="flex-1 p-6 text-center text-slate-500">Đang tải dữ liệu bài viết cũ...</div>
-            </div>
+            <div className="p-6 text-center text-slate-500">Đang tải dữ liệu bài viết cũ...</div>
         );
     }
 
     return (
-        <div className="flex">
-            <AdminSidebar />
-            <div className="flex-1 p-6 bg-slate-50 dark:bg-slate-900 min-h-screen">
+        <div className="flex-1 p-6 bg-slate-50 dark:bg-slate-900 min-h-screen">
                 <div className="mb-6">
                     <Link to="/admin/news" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-emerald-600 transition-colors">
                         <ArrowLeft className="h-4 w-4" /> Hủy và quay lại danh sách
@@ -175,13 +171,12 @@ export default function EditNews() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow transition disabled:opacity-50"
+                            className="tt-btn-primary gap-2 px-5 py-2.5 disabled:opacity-50"
                         >
                             <Save className="h-4 w-4" /> {isSubmitting ? "Đang lưu..." : "Cập nhật thay đổi"}
                         </button>
                     </div>
                 </form>
             </div>
-        </div>
     );
 }

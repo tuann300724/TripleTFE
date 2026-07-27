@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Package, Save, Tag, X, Upload, Trash2, Image as ImageIcon, Plus } from "lucide-react";
+import { ArrowLeft, Package, Save, Tag, Upload, Trash2, Image as ImageIcon, Plus } from "lucide-react";
+import { API_BASE } from "../config";
+import { useToast } from "../components/Toast";
 
 const inputClass =
     "w-full rounded-xl border border-slate-200/80 bg-white/80 px-4 py-2.5 text-sm outline-none transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 dark:border-slate-600 dark:bg-slate-800/80 dark:text-white";
@@ -8,6 +10,7 @@ const labelClass = "mb-2 block text-sm font-medium text-slate-700 dark:text-slat
 
 export default function ProductCreate() {
     const navigate = useNavigate();
+    const toast = useToast();
 
     // --- STATE DANH SÁCH LẤY TỪ API ---
     const [categories, setCategories] = useState([]);
@@ -30,13 +33,13 @@ export default function ProductCreate() {
     // --- 1. GỌI API ĐỂ LẤY DANH MỤC VÀ THƯƠNG HIỆU ---
     useEffect(() => {
         // Lấy danh mục
-        fetch("https://localhost:7147/api/Categories")
+        fetch(API_BASE + "/Categories")
             .then((res) => res.json())
             .then((data) => setCategories(data))
             .catch((err) => console.error("Lỗi lấy danh mục:", err));
 
         // Lấy thương hiệu (Bạn thay URL đúng của API Brands nhé)
-        fetch("https://localhost:7147/api/Brands")
+        fetch(API_BASE + "/Brands")
             .then((res) => res.json())
             .then((data) => setBrands(data))
             .catch((err) => console.error("Lỗi lấy thương hiệu:", err));
@@ -49,7 +52,7 @@ export default function ProductCreate() {
 
     const handleRemoveVariant = (index) => {
         if (variants.length === 1) {
-            alert("Sản phẩm phải có ít nhất một biến thể giá và kho hàng!");
+            toast("Sản phẩm phải có ít nhất một biến thể giá và kho hàng!", "error");
             return;
         }
         setVariants(variants.filter((_, i) => i !== index));
@@ -65,7 +68,7 @@ export default function ProductCreate() {
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
         if (images.length + files.length > 5) {
-            alert("Bạn chỉ được tải lên tối đa 5 hình ảnh!");
+            toast("Bạn chỉ được tải lên tối đa 5 hình ảnh!", "error");
             return;
         }
         const newImages = files.map((file) => ({
@@ -90,18 +93,18 @@ export default function ProductCreate() {
         e.preventDefault();
 
         if (!productName || !brandId || !categoryId) {
-            alert("Vui lòng điền đầy đủ thông tin sản phẩm bắt buộc!");
+            toast("Vui lòng điền đầy đủ thông tin sản phẩm bắt buộc!", "error");
             return;
         }
         if (images.length === 0) {
-            alert("Vui lòng chọn ít nhất một ảnh bìa!");
+            toast("Vui lòng chọn ít nhất một ảnh bìa!", "error");
             return;
         }
 
         // Kiểm tra xem các dòng variant đã nhập đủ Giá và Kho chưa
         const isVariantsValid = variants.every(v => v.price && v.stock);
         if (!isVariantsValid) {
-            alert("Vui lòng nhập đầy đủ Giá bán và Tồn kho cho tất cả các biến thể!");
+            toast("Vui lòng nhập đầy đủ Giá bán và Tồn kho cho tất cả các biến thể!", "error");
             return;
         }
 
@@ -123,7 +126,7 @@ export default function ProductCreate() {
                 });
             }
 
-            const productResponse = await fetch("https://localhost:7147/api/Products", {
+            const productResponse = await fetch(API_BASE + "/Products", {
                 method: "POST",
                 body: formData,
             });
@@ -144,7 +147,7 @@ export default function ProductCreate() {
                     stock: parseInt(variant.stock)
                 };
 
-                return fetch("https://localhost:7147/api/ProductVariants", {
+                return fetch(API_BASE + "/ProductVariants", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(variantPayload),
@@ -157,12 +160,12 @@ export default function ProductCreate() {
             // Đợi toàn bộ API Variant chạy xong thành công
             await Promise.all(variantPromises);
 
-            alert("Đã thêm sản phẩm và toàn bộ biến thể thành công!");
+            toast("Đã thêm sản phẩm và toàn bộ biến thể thành công!", "success");
             navigate("/admin/products");
 
         } catch (error) {
             console.error(error);
-            alert(error.message || "Hệ thống gặp lỗi khi lưu dữ liệu!");
+            toast(error.message || "Hệ thống gặp lỗi khi lưu dữ liệu!", "error");
         } finally {
             setIsSubmitting(false);
         }

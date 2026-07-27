@@ -23,6 +23,32 @@ export const branchesData = [
             { id: 2, name: "Sân 2 - Tiêu chuẩn", type: "Thảm PVC", price: "100.000đ/h", pricePerSlot: 50000 },
             { id: 3, name: "Sân 3 - VIP", type: "Thảm cao su cao cấp", price: "150.000đ/h", pricePerSlot: 75000 },
             { id: 4, name: "Sân 4 - VIP", type: "Thảm cao su cao cấp", price: "150.000đ/h", pricePerSlot: 75000 }
+        ],
+        comments: [
+            {
+                id: 1,
+                user: "Nguyễn Minh Tuấn",
+                avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
+                rating: 5,
+                date: "2026-06-25",
+                content: "Sân rất đẹp, thảm mới và rất êm chân. Ánh sáng thiết kế cực tốt không bị chói khi đập cầu."
+            },
+            {
+                id: 2,
+                user: "Phạm Thuỳ Linh",
+                avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
+                rating: 4,
+                date: "2026-06-23",
+                content: "Nhân viên nhiệt tình, có căng tin phục vụ nước uống mát lạnh. Tuy nhiên giờ cao điểm hơi đông và khó gửi xe một chút."
+            },
+            {
+                id: 3,
+                user: "Hoàng Anh Đức",
+                avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=150&q=80",
+                rating: 5,
+                date: "2026-06-18",
+                content: "Sân trần cao và thoáng gió. Dịch vụ cho thuê vợt chất lượng tốt. Sẽ tiếp tục ủng hộ CLB lâu dài!"
+            }
         ]
     },
     {
@@ -47,6 +73,24 @@ export const branchesData = [
             { id: 5, name: "Sân 1 - Tiêu chuẩn", type: "Thảm PVC", price: "80.000đ/h", pricePerSlot: 40000 },
             { id: 6, name: "Sân 2 - Tiêu chuẩn", type: "Thảm PVC", price: "80.000đ/h", pricePerSlot: 40000 },
             { id: 7, name: "Sân 3 - Cao cấp", type: "Thảm cao su", price: "120.000đ/h", pricePerSlot: 60000 }
+        ],
+        comments: [
+            {
+                id: 1,
+                user: "Lê Văn Tiến",
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
+                rating: 4,
+                date: "2026-06-20",
+                content: "Sân sạch sẽ, không gian thoáng mát gần gũi thiên nhiên. Thích hợp cho anh em đi giao lưu cuối tuần."
+            },
+            {
+                id: 2,
+                user: "Bùi Thị Mai",
+                avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80",
+                rating: 5,
+                date: "2026-06-15",
+                content: "Hệ thống đèn chiếu sáng cực kỳ tốt, không bị chói. Có chỗ đỗ xe rộng rãi an toàn."
+            }
         ]
     },
     {
@@ -72,6 +116,32 @@ export const branchesData = [
             { id: 9, name: "Sân 2 - Tiêu chuẩn", type: "Thảm PVC", price: "100.000đ/h", pricePerSlot: 50000 },
             { id: 10, name: "Sân 3 - VIP", type: "Thảm cao su cao cấp", price: "150.000đ/h", pricePerSlot: 75000 },
             { id: 11, name: "Sân 4 - VIP", type: "Thảm cao su cao cấp", price: "150.000đ/h", pricePerSlot: 75000 }
+        ],
+        comments: [
+            {
+                id: 1,
+                user: "Đinh Xuân Trường",
+                avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80",
+                rating: 5,
+                date: "2026-06-26",
+                content: "Đúng chất sân đẳng cấp. Thảm êm, trần cao không bị bí bách. Quầy shop thể thao phục vụ chuyên nghiệp và căng dây rất chuẩn."
+            },
+            {
+                id: 2,
+                user: "Vũ Khánh Huyền",
+                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
+                rating: 5,
+                date: "2026-06-24",
+                content: "Sân nằm ngay mặt tiền đường dễ tìm. Nhà vệ sinh và phòng thay đồ cực kỳ sạch sẽ và hiện đại. Vote 5 sao!"
+            },
+            {
+                id: 3,
+                user: "Lý Gia Kiệt",
+                avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&q=80",
+                rating: 4.7,
+                date: "2026-06-21",
+                content: "Sân tuyệt vời, giá cả hợp lý so với chất lượng. Nước uống phong phú, nhân viên quầy phục vụ rất thân thiện."
+            }
         ]
     },
     {
@@ -96,6 +166,24 @@ export const branchesData = [
             { id: 12, name: "Sân 1 - Tiêu chuẩn", type: "Thảm PVC", price: "80.000đ/h", pricePerSlot: 40000 },
             { id: 13, name: "Sân 2 - Tiêu chuẩn", type: "Thảm PVC", price: "80.000đ/h", pricePerSlot: 40000 },
             { id: 14, name: "Sân 3 - Cao cấp", type: "Thảm cao su", price: "120.000đ/h", pricePerSlot: 60000 }
+        ],
+        comments: [
+            {
+                id: 1,
+                user: "Nguyễn Hải Đăng",
+                avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80",
+                rating: 4.5,
+                date: "2026-06-22",
+                content: "Sân chất lượng cao, thảm đệm êm chân đúng như giới thiệu. Đá đôi hay đá đơn đều rất phê."
+            },
+            {
+                id: 2,
+                user: "Trần Kim Oanh",
+                avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80",
+                rating: 4.7,
+                date: "2026-06-19",
+                content: "Rất thích hợp cho các gia đình đưa con em đi tập luyện nâng cao sức khỏe vào dịp hè."
+            }
         ]
     },
     {
@@ -121,6 +209,24 @@ export const branchesData = [
             { id: 16, name: "Sân 2 - Tiêu chuẩn", type: "Thảm PVC", price: "90.000đ/h", pricePerSlot: 45000 },
             { id: 17, name: "Sân 3 - VIP", type: "Thảm cao su", price: "140.000đ/h", pricePerSlot: 70000 },
             { id: 18, name: "Sân 4 - VIP", type: "Thảm cao su", price: "140.000đ/h", pricePerSlot: 70000 }
+        ],
+        comments: [
+            {
+                id: 1,
+                user: "Tạ Hoàng Minh",
+                avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80",
+                rating: 5,
+                date: "2026-06-25",
+                content: "CLB sạch sẽ, đặc biệt có phòng tắm nước nóng xịn xò sau khi chơi mồ hôi đầm đìa."
+            },
+            {
+                id: 2,
+                user: "Lê Thảo Vy",
+                avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80",
+                rating: 4.4,
+                date: "2026-06-20",
+                content: "Sân rộng rãi và an ninh tốt. Anh chủ sân cũng rất dễ tính và hay hỗ trợ người chơi."
+            }
         ]
     },
     {
@@ -145,6 +251,24 @@ export const branchesData = [
             { id: 19, name: "Sân 1 - Tiêu chuẩn", type: "Thảm PVC", price: "80.000đ/h", pricePerSlot: 40000 },
             { id: 20, name: "Sân 2 - Tiêu chuẩn", type: "Thảm PVC", price: "80.000đ/h", pricePerSlot: 40000 },
             { id: 21, name: "Sân 3 - Premium", type: "Thảm cao su", price: "130.000đ/h", pricePerSlot: 65000 }
+        ],
+        comments: [
+            {
+                id: 1,
+                user: "Điểu Giang",
+                avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80",
+                rating: 5,
+                date: "2026-06-24",
+                content: "Sân rất hoành tráng, có khán đài ngồi cổ vũ xem sướng cực kỳ. Giao lưu vui vẻ!"
+            },
+            {
+                id: 2,
+                user: "Thị Hồng",
+                avatar: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=150&q=80",
+                rating: 4.6,
+                date: "2026-06-22",
+                content: "Hệ thống thảm cao cấp giảm rung rất êm chân khi chạy nhảy cứu cầu."
+            }
         ]
     }
 ];
