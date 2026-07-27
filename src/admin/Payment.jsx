@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { CreditCard, Loader2, Eye, Search, X, Calendar, ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
-import AdminSidebar from "./components/AdminSidebar";
+import { API_BASE } from "../config";
+import { useToast } from "../components/Toast";
+
 
 export default function Payment() {
     const columns = ["Mã GD", "Mã Đơn", "Phương thức", "Số tiền", "Ngày GD", "Trạng thái", "Thao tác"];
     const ITEMS_PER_PAGE = 10; // Giới hạn hiển thị 10 dòng trên 1 trang
+    const toast = useToast();
 
     // --- STATE QUẢN LÝ DỮ LIỆU PAYMENT ---
     const [payments, setPayments] = useState([]);
@@ -23,7 +26,7 @@ export default function Payment() {
 
     // --- FETCH DANH SÁCH PAYMENTS ---
     useEffect(() => {
-        fetch("https://localhost:7147/api/Payments")
+        fetch(API_BASE + "/Payments")
             .then((res) => {
                 if (!res.ok) throw new Error("Không thể lấy danh sách giao dịch!");
                 return res.json();
@@ -53,7 +56,7 @@ export default function Payment() {
     // --- HÀM XEM CHI TIẾT ORDER DỰA VÀO ORDERID CỦA PAYMENT ---
     const handleViewOrderDetail = async (orderId) => {
         if (!orderId) {
-            alert("Giao dịch này không gắn với mã đơn hàng nào!");
+            toast("Giao dịch này không gắn với mã đơn hàng nào!", "error");
             return;
         }
 
@@ -62,12 +65,12 @@ export default function Payment() {
         setSelectedOrder(null);
 
         try {
-            const response = await fetch(`https://localhost:7147/api/Orders/${orderId}`);
+            const response = await fetch(API_BASE + `/Orders/${orderId}`);
             if (!response.ok) throw new Error("Không thể tải thông tin chi tiết đơn hàng này!");
             const orderData = await response.json();
             setSelectedOrder(orderData);
         } catch (err) {
-            alert(err.message);
+            toast(err.message, "error");
             setIsModalOpen(false);
         } finally {
             setIsLoadingOrder(false);
@@ -109,8 +112,7 @@ export default function Payment() {
     };
 
     return (
-        <div className="flex bg-slate-50 dark:bg-slate-900 min-h-screen">
-            <AdminSidebar />
+        <>
             <div className="flex-1 min-w-0">
                 <div className="p-6 space-y-6 max-w-7xl mx-auto">
 
@@ -223,7 +225,7 @@ export default function Payment() {
                                             <td className="px-4 py-3.5 whitespace-nowrap text-sm font-semibold text-emerald-600">#{p.orderId}</td>
                                             <td className="px-4 py-3.5 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 font-medium">{p.paymentMethod}</td>
                                             <td className="px-4 py-3.5 whitespace-nowrap text-sm font-bold text-slate-900 dark:text-white">{formatCurrency(p.amount)}</td>
-                                            <td className="px-4 py-3.5 whitespace-nowrap text-sm text-slate-500">{formatDate(p.paymentDate)}</td>
+                                            <td className="px-4 py-3.5 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{formatDate(p.paymentDate)}</td>
                                             <td className="px-4 py-3.5 whitespace-nowrap text-sm">
                                                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold border ${p.paymentStatus === "Paid"
                                                     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
@@ -238,7 +240,7 @@ export default function Payment() {
                                                 <button
                                                     type="button"
                                                     onClick={() => handleViewOrderDetail(p.orderId)}
-                                                    className="flex h-8 px-3 items-center gap-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-emerald-600 hover:text-white transition font-medium text-xs dark:bg-slate-700 dark:text-white"
+                                                    className="tt-btn-primary h-8 px-3 gap-1.5 text-xs"
                                                 >
                                                     <Eye className="h-3.5 w-3.5" /> Xem đơn hàng
                                                 </button>
@@ -291,7 +293,7 @@ export default function Payment() {
                         )}
                     </div>
                 </div>
-            </div>
+                </div>
 
             {/* --- MODAL DIALOG XEM CHI TIẾT ĐƠN HÀNG CỦA GIAO DỊCH --- */}
             {isModalOpen && (
@@ -397,6 +399,6 @@ export default function Payment() {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }

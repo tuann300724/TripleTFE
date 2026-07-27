@@ -1,6 +1,24 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import axios from "axios";
+import api from "../service/api";
+import { FadeIn } from "../components/Animate";
+
+
+function EyeOffIcon() {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+        </svg>
+    );
+}
+function EyeOnIcon() {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+    );
+}
 
 export default function Register() {
     const [showPassword, setShowPassword] = useState(false);
@@ -8,7 +26,6 @@ export default function Register() {
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
-    const [address, setAddress] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -20,19 +37,6 @@ export default function Register() {
     const inputClassPr10 = "w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 pl-10 pr-10 py-2.5 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all duration-300 hover:border-emerald-500/60 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20";
     const labelClass = "text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300";
     const iconClass = "absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500";
-
-    // SVG icons (reusable)
-    const EyeOffIcon = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-        </svg>
-    );
-    const EyeOnIcon = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-    );
 
     return (
         <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-100 dark:bg-slate-900 px-4 py-12 sm:px-6 lg:px-8 transition-colors duration-300">
@@ -52,7 +56,8 @@ export default function Register() {
 
             <div className="relative w-full max-w-md space-y-8">
                 {/* Card */}
-                <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-3xl p-8 shadow-xl dark:shadow-2xl space-y-6 transition-colors duration-300">
+                <FadeIn>
+                    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-3xl p-8 shadow-xl dark:shadow-2xl space-y-6 transition-colors duration-300">
                     {/* Header */}
                     <div className="flex flex-col items-center">
                         <Link to="/" className="flex items-center gap-2">
@@ -82,7 +87,7 @@ export default function Register() {
                             setLoading(true);
                             try {
                                 const now = new Date().toISOString();
-                                const userRes = await axios.post("https://localhost:7147/api/User", {
+                                const userRes = await api.post("/User", {
                                     email,
                                     passwordHash: password,
                                     role: "Customer",
@@ -91,16 +96,16 @@ export default function Register() {
                                     updatedAt: now
                                 });
                                 const userId = userRes.data.userId || userRes.data.id || userRes.data.UserId || userRes.data.ID;
-                                await axios.post("https://localhost:7147/api/UserProfile", {
+                                await api.post("/UserProfile", {
                                     userId,
                                     fullName,
                                     phone,
-                                    address,
+                                    address: "",
                                     avatar: null
                                 });
                                 setLoading(false);
                                 navigate("/login");
-                            } catch (err) {
+                            } catch {
                                 setLoading(false);
                                 setError("Đăng ký thất bại. Vui lòng thử lại hoặc dùng email khác.");
                             }
@@ -219,7 +224,7 @@ export default function Register() {
 
                         <button
                             type="submit"
-                            className="tt-hover-scale flex w-full items-center justify-center rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-500 transition-all duration-300 disabled:opacity-60"
+                            className="tt-btn-primary w-full py-3 disabled:opacity-60"
                             disabled={loading}
                         >
                             {loading ? "Đang đăng ký..." : "Đăng ký"}
@@ -259,7 +264,8 @@ export default function Register() {
                             Đăng nhập ngay
                         </Link>
                     </div>
-                </div>
+                    </div>
+                </FadeIn>
             </div>
         </div>
     );

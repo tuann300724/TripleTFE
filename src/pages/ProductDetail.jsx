@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../service/api";
+import { ShoppingCart } from "lucide-react";
+import { FadeIn } from "../components/Animate";
+import { useToast } from "../components/Toast";
+import { useAuth } from "../hooks/useAuth";
 
 export default function ProductDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [product, setProduct] = useState(null);
     const [variants, setVariants] = useState([]);
+    const [error, setError] = useState(null);
 
     const [selectedImage, setSelectedImage] = useState("");
     const [selectedSize, setSelectedSize] = useState("");
@@ -15,43 +21,62 @@ export default function ProductDetail() {
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState("specs");
     const [showAlert, setShowAlert] = useState(false);
+    const toast = useToast();
 
     // 1. Fetch Product Data
     useEffect(() => {
-        axios
-            .get(`https://localhost:7147/api/Products/${id}`)
+        api
+            .get(`/Products/${id}`)
             .then((res) => {
                 setProduct(res.data);
                 setSelectedImage(res.data.thumbnail || "");
             })
-            .catch((err) => console.error("Lỗi lấy chi tiết sản phẩm:", err));
+            .catch((err) => {
+                console.error("Lỗi lấy chi tiết sản phẩm:", err);
+                setError(err.message);
+            });
     }, [id]);
 
     // 2. Fetch Variants Data (Nên tối ưu API lọc theo productId từ backend nếu được)
     useEffect(() => {
-        axios
-            .get("https://localhost:7147/api/ProductVariants")
+        api
+            .get("/ProductVariants")
             .then((res) => {
                 const filteredVariants = res.data.filter(
                     (item) => item.productId === Number(id)
                 );
                 setVariants(filteredVariants);
             })
-            .catch((err) => console.error("Lỗi lấy biến thể sản phẩm:", err));
+            .catch((err) => {
+                console.error("Lỗi lấy biến thể sản phẩm:", err);
+                setError(err.message);
+            });
     }, [id]);
 
-    // Đồng bộ cập nhật ảnh khi chọn màu sắc (Nếu variant có chứa trường image riêng)
+    // Đồng bộ cập nhật ảnh khi chọn màu sắc (dùng thumbnail nếu có, không thì giữ ảnh mặc định)
     useEffect(() => {
-        if (selectedColor) {
-            const variantWithImg = variants.find(v => v.color === selectedColor && v.image);
-            if (variantWithImg) {
-                setSelectedImage(variantWithImg.image);
-            }
+        if (selectedColor && product?.thumbnail) {
+            setSelectedImage(product.thumbnail);
         }
-    }, [selectedColor, variants]);
+    }, [selectedColor, variants, product?.thumbnail]);
 
     // Loading check đặt dưới hooks để tránh vi phạm Rules of Hooks
-    if (!product) return <div className="flex h-screen items-center justify-center text-slate-500">Đang tải sản phẩm...</div>;
+    if (error) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <div className="rounded-2xl border border-dashed border-red-200 bg-red-50/50 py-16 px-8 text-center">
+                    <p className="text-red-500 font-medium">{error}</p>
+                    <button onClick={() => window.location.reload()} className="mt-3 text-sm text-emerald-600 hover:underline">Thử lại</button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!product) return (
+        <div className="flex h-screen items-center justify-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+        </div>
+    );
 
     // Lấy danh sách Size và Color độc nhất
     const sizes = [...new Set(variants.map((v) => v.size))];
@@ -84,15 +109,14 @@ export default function ProductDetail() {
 
     // Hàm kiểm tra điều kiện trước khi Add to cart hoặc Mua ngay
     const checkValidSelection = () => {
-        const user = JSON.parse(localStorage.getItem("user"));
         if (!user) {
-            alert("Vui lòng đăng nhập để tiếp tục mua sắm!");
+            toast("Vui lòng đăng nhập để tiếp tục mua sắm!", "error");
             navigate("/login");
             return null;
         }
 
         if (!selectedSize || !selectedColor) {
-            alert("Vui lòng chọn đầy đủ Kích thước và Màu sắc sản phẩm!");
+            toast("Vui lòng chọn đầy đủ Kích thước và Màu sắc sản phẩm!", "error");
             return null;
         }
 
@@ -101,12 +125,12 @@ export default function ProductDetail() {
         );
 
         if (!selectedVariant) {
-            alert("Phiên bản sản phẩm này hiện không tồn tại!");
+            toast("Phiên bản sản phẩm này hiện không tồn tại!", "error");
             return null;
         }
 
         if (selectedVariant.stock < quantity) {
-            alert(`Sản phẩm này chỉ còn lại ${selectedVariant.stock} mặt hàng trong kho!`);
+            toast(`Sản phẩm này chỉ còn lại ${selectedVariant.stock} mặt hàng trong kho!`, "error");
             return null;
         }
 
@@ -121,7 +145,7 @@ export default function ProductDetail() {
         const { user, selectedVariant } = validation;
 
         try {
-            await axios.post("https://localhost:7147/api/Carts/add-to-cart", {
+            await api.post("/Carts/add-to-cart", {
                 userId: user.userId,
                 variantId: selectedVariant.variantId,
                 quantity: quantity,
@@ -133,28 +157,7 @@ export default function ProductDetail() {
             setTimeout(() => setShowAlert(false), 3000);
         } catch (error) {
             console.error(error);
-            alert("Thêm vào giỏ hàng thất bại. Vui lòng thử lại sau.");
-        }
-    };
-
-    // Xử lý Mua Ngay (Thêm vào giỏ xong điều hướng thẳng đến trang checkout)
-    const handleBuyNow = async () => {
-        const validation = checkValidSelection();
-        if (!validation) return;
-
-        const { user, selectedVariant } = validation;
-
-        try {
-            await axios.post("https://localhost:7147/api/Carts/add-to-cart", {
-                userId: user.userId,
-                variantId: selectedVariant.variantId,
-                quantity: quantity,
-            });
-            window.dispatchEvent(new Event("cartUpdated"));
-            navigate("/checkout");
-        } catch (error) {
-            console.error(error);
-            navigate("/checkout"); // Fallback chuyển trang nếu API lỗi nhưng giỏ hàng cũ vẫn có thể thanh toán
+            toast("Thêm vào giỏ hàng thất bại. Vui lòng thử lại sau.", "error");
         }
     };
 
@@ -163,7 +166,7 @@ export default function ProductDetail() {
             {/* Alert Notification */}
             {showAlert && (
                 <div className="fixed top-24 right-6 z-50 flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-800 dark:text-emerald-400 backdrop-blur-xl shadow-xl animate-bounce">
-                    <span className="text-xl">🛒</span>
+                    <ShoppingCart size={20} />
                     <div>
                         <p className="font-semibold text-sm">Đã thêm vào giỏ hàng thành công!</p>
                         <p className="text-xs opacity-80 max-w-[200px] truncate">Sản phẩm: {product.productName}</p>
@@ -187,7 +190,8 @@ export default function ProductDetail() {
                 {/* Main Content */}
                 <div className="mt-8 grid gap-8 lg:grid-cols-12">
                     {/* Left: Image Gallery */}
-                    <div className="lg:col-span-6 space-y-4">
+                    <FadeIn delay={100} className="lg:col-span-6">
+                        <div className="space-y-4">
                         <div className="group overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 aspect-square flex items-center justify-center shadow-sm">
                             <img
                                 src={selectedImage}
@@ -201,7 +205,7 @@ export default function ProductDetail() {
                             <button
                                 type="button"
                                 onClick={() => setSelectedImage(product.thumbnail)}
-                                className={`aspect-square overflow-hidden rounded-xl border-2 transition-all ${selectedImage === product.thumbnail ? "border-emerald-500 scale-95" : "border-slate-200"}`}
+                                className={`aspect-square overflow-hidden rounded-xl border-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:ring-2 hover:ring-emerald-500 ${selectedImage === product.thumbnail ? "border-emerald-500 scale-95" : "border-slate-200"}`}
                             >
                                 <img src={product.thumbnail} alt="Main" className="h-full w-full object-cover" />
                             </button>
@@ -211,16 +215,18 @@ export default function ProductDetail() {
                                     key={index}
                                     type="button"
                                     onClick={() => setSelectedImage(img)}
-                                    className={`aspect-square overflow-hidden rounded-xl border-2 transition-all ${selectedImage === img ? "border-emerald-500 scale-95" : "border-slate-200"}`}
+                                    className={`aspect-square overflow-hidden rounded-xl border-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:ring-2 hover:ring-emerald-500 ${selectedImage === img ? "border-emerald-500 scale-95" : "border-slate-200"}`}
                                 >
                                     <img src={img} alt="Detail" className="h-full w-full object-cover" />
                                 </button>
                             ))}
                         </div>
                     </div>
+                    </FadeIn>
 
                     {/* Right: Info Config */}
-                    <div className="lg:col-span-6 flex flex-col justify-between space-y-6">
+                    <FadeIn className="lg:col-span-6">
+                        <div className="flex flex-col justify-between space-y-6">
                         <div className="space-y-4">
                             <div className="flex items-center gap-2">
                                 <span className="bg-slate-200 dark:bg-slate-800 px-2.5 py-0.5 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-400">{product.categoryName}</span>
@@ -255,24 +261,17 @@ export default function ProductDetail() {
                                         activeVariant = variants.find(v => v.color === selectedColor);
                                     }
 
-                                    if (activeVariant) {
+                                    if (activeVariant?.price) {
                                         return (
                                             <>
                                                 <span className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
                                                     {formatPrice(activeVariant.price)}
                                                 </span>
-                                                {activeVariant.oldPrice && (
-                                                    <>
-                                                        <span className="text-base text-slate-400 line-through">{formatPrice(activeVariant.oldPrice)}</span>
-                                                        <span className="rounded-lg bg-red-500/10 px-2 py-0.5 text-xs font-bold text-red-600 dark:text-red-400">
-                                                            -{Math.round(((activeVariant.oldPrice - activeVariant.price) / activeVariant.oldPrice) * 100)}%
-                                                        </span>
-                                                    </>
-                                                )}
                                             </>
                                         );
                                     } else if (variants.length > 0) {
-                                        const prices = variants.map(v => v.price);
+                                        const prices = variants.map(v => v.price).filter(Boolean);
+                                        if (prices.length === 0) return null;
                                         const minPrice = Math.min(...prices);
                                         const maxPrice = Math.max(...prices);
                                         return (
@@ -281,7 +280,7 @@ export default function ProductDetail() {
                                             </span>
                                         );
                                     }
-                                    return <span className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{formatPrice(product.price)}</span>;
+                                    return <span className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{formatPrice(product.minPrice)}</span>;
                                 })()}
                             </div>
 
@@ -303,7 +302,7 @@ export default function ProductDetail() {
                                                 key={size}
                                                 type="button"
                                                 onClick={() => !disabled && setSelectedSize(selectedSize === size ? "" : size)}
-                                                className={`rounded-xl border px-4 py-2 text-sm transition-all ${selectedSize === size
+                                                className={`rounded-xl border px-4 py-2 text-sm transition-all duration-200 active:scale-[0.96] ${selectedSize === size
                                                     ? "border-emerald-500 bg-emerald-500/10 font-medium text-emerald-600"
                                                     : "border-slate-200 text-slate-700 dark:text-slate-300 dark:border-slate-800"
                                                     } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:border-slate-400"}`}
@@ -327,7 +326,7 @@ export default function ProductDetail() {
                                                 key={color}
                                                 type="button"
                                                 onClick={() => !disabled && setSelectedColor(selectedColor === color ? "" : color)}
-                                                className={`rounded-xl border px-4 py-2 text-sm transition-all ${selectedColor === color
+                                                className={`rounded-xl border px-4 py-2 text-sm transition-all duration-200 active:scale-[0.96] ${selectedColor === color
                                                     ? "border-emerald-500 bg-emerald-500/10 font-medium text-emerald-600"
                                                     : "border-slate-200 text-slate-700 dark:text-slate-300 dark:border-slate-800"
                                                     } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:border-slate-400"}`}
@@ -366,21 +365,38 @@ export default function ProductDetail() {
                         </div>
 
                         {/* CTA Buttons */}
-                        <div className="grid grid-cols-2 gap-4 pt-4">
+                        <div className="flex gap-4 pt-4">
                             <button
                                 type="button"
                                 onClick={handleAddToCart}
-                                className="w-full border-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-500/10 font-bold py-3.5 flex justify-center items-center gap-2 transition-all"
+                                className="flex-1 border-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-500/10 font-bold py-3.5 flex justify-center items-center gap-2 transition-all"
                             >
                                 Thêm vào giỏ
                             </button>
-                        
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    const validation = checkValidSelection();
+                                    if (!validation) return;
+                                    const { user, selectedVariant } = validation;
+                                    try {
+                                        await api.post("/Carts/add-to-cart", { userId: user.userId, variantId: selectedVariant.variantId, quantity });
+                                        window.dispatchEvent(new Event("cartUpdated"));
+                                        navigate("/checkout");
+                                    } catch { toast("Thêm vào giỏ thất bại!", "error"); }
+                                }}
+                                className="flex-1 bg-emerald-600 text-white rounded-xl hover:bg-emerald-500 font-bold py-3.5 flex justify-center items-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
+                            >
+                                Mua ngay
+                            </button>
                         </div>
                     </div>
+                    </FadeIn>
                 </div>
 
                 {/* Tabs Information (Specs/Desc) */}
-                <div className="mt-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8">
+                <FadeIn delay={150}>
+                    <div className="mt-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8">
                     <div className="flex border-b border-slate-200 dark:border-slate-700 gap-6">
                         {[
                             { id: "specs", label: "Thông số kỹ thuật" },
@@ -427,6 +443,7 @@ export default function ProductDetail() {
                         )}
                     </div>
                 </div>
+                </FadeIn>
             </div>
         </div>
     );

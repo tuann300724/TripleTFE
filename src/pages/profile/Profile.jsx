@@ -1,13 +1,22 @@
 import { useState, useEffect, useRef } from "react";
+import api from "../../service/api";
 import axios from "axios";
+import { API_BASE } from "../../config";
 import ProfileInfo from "./ProfileInfo";
+import Breadcrumb from "../../components/Breadcrumb";
 import ProfileOrders from "./ProfileOrders";
 import ProfileSecurity from "./ProfileSecurity";
 import ProfileCourts from "./ProfileCourts";
+import { User, Target, Trophy } from "lucide-react";
+import { FadeIn } from "../../components/Animate";
+import { useToast } from "../../components/Toast";
 
 export default function Profile() {
     const [activeTab, setActiveTab] = useState("info");
     const [showSaveToast, setShowSaveToast] = useState(false);
+    const toast = useToast();
+
+    const [profileLoading, setProfileLoading] = useState(true);
 
     // ProfileInfo & Header states
     const [userData, setUserData] = useState({
@@ -16,7 +25,6 @@ export default function Profile() {
         address: "",
         email: ""
     });
-    const [userLoaded, setUserLoaded] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80");
     const [avatarFile, setAvatarFile] = useState(null);
     const [provinces, setProvinces] = useState([]);
@@ -30,16 +38,13 @@ export default function Profile() {
 
     // Orders state
     const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user || !user.userId) {
-            setUserLoaded(true);
             return;
         }
-        axios.get(`https://localhost:7147/api/User/${user.userId}`)
+        api.get(`/User/${user.userId}`)
             .then((res) => {
                 const data = res.data;
                 if (data.userId === Number(user.userId)) {
@@ -53,11 +58,11 @@ export default function Profile() {
                         setAvatarPreview(data.profile?.avatar || data.avatar);
                     }
                 }
-                setUserLoaded(true);
+                setProfileLoading(false);
             })
             .catch((err) => {
                 console.error("Lỗi khi tải thông tin user:", err);
-                setUserLoaded(true);
+                setProfileLoading(false);
             });
     }, []);
 
@@ -123,7 +128,7 @@ export default function Profile() {
             const userToken = JSON.parse(localStorage.getItem("user"));
             const targetId = userToken?.userId;
 
-            const response = await axios.put(`https://localhost:7147/api/UserProfile/${targetId}`, formData, {
+            const response = await api.put(`/UserProfile/${targetId}`, formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
@@ -136,19 +141,15 @@ export default function Profile() {
             console.log("API PUT thành công:", response.data);
         } catch (error) {
             console.error("Lỗi API PUT:", error);
-            alert("Cập nhật thất bại, vui lòng kiểm tra lại kết nối API!");
+            toast("Cập nhật thất bại, vui lòng kiểm tra lại kết nối API!", "error");
         }
     };
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem("user"));
-        if (!user || !user.userId) {
-            setUserLoaded(true);
-            return;
-        }
-        if (activeTab !== "orders") return;
+        if (!user || !user.userId || activeTab !== "orders") return;
 
-        fetch(`https://localhost:7147/api/Orders/user/${user.userId}`)
+        fetch(API_BASE + `/Orders/user/${user.userId}`)
             .then((res) => {
                 if (!res.ok) throw new Error('Không thể tải dữ liệu lịch sử đơn hàng.');
                 return res.json();
@@ -156,24 +157,32 @@ export default function Profile() {
             .then((data) => {
                 const sortedOrders = data.sort((a, b) => b.orderId - a.orderId);
                 setOrders(sortedOrders);
-                setLoading(false);
             })
             .catch((err) => {
-                setError(err.message);
-                setLoading(false);
+                console.error(err);
             });
     }, [activeTab]);
 
     const tabs = [
-        { id: "info", name: "Thông tin cá nhân", icon: "👤" },
+        { id: "info", name: "Thông tin cá nhân", icon: <User size={16} /> },
         { id: "orders", name: "Lịch sử mua hàng", icon: "📦", badge: orders.length },
-        { id: "courts", name: "Quản lý sân", icon: "🏸" },
+        { id: "courts", name: "Quản lý sân", icon: <Target size={16} /> },
         { id: "security", name: "Bảo mật tài khoản", icon: "🔒" },
     ];
+
+    if (profileLoading) {
+        return (
+            <div className="flex items-center justify-center py-20 min-h-screen bg-slate-50 dark:bg-[#0c1219]">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+            </div>
+        );
+    }
 
     return (
         <div className="bg-slate-50 dark:bg-[#0c1219] py-8 min-h-screen text-slate-800 dark:text-slate-200 transition-colors duration-300">
             <div className="mx-auto max-w-6xl px-6">
+                <Breadcrumb items={[{ label: "Tài khoản" }]} />
+
                 {/* Banner Cover */}
                 <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-lime-500 h-36 md:h-48 shadow-xl shadow-emerald-500/5 mb-6">
                     <div className="absolute inset-0 opacity-20">
@@ -207,7 +216,7 @@ export default function Profile() {
                             <div className="flex flex-wrap items-center gap-2.5 justify-center md:justify-start">
                                 <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white">{userData?.fullName || "Chưa cập nhật"}</h1>
                                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                    🏆 Thành viên Vàng
+                                    <Trophy size={14} className="inline" /> Thành viên Vàng
                                 </span>
                             </div>
                             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{userData?.email || "Chưa có email"}</p>
@@ -218,7 +227,7 @@ export default function Profile() {
                     {/* Điểm tích lũy */}
                     <div className="w-full md:w-auto flex flex-col items-center md:items-end gap-1.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl p-4 min-w-[240px] shadow-sm">
                         <div className="flex items-center gap-2">
-                            <span className="text-lg">🏸</span>
+                            <Target size={20} />
                             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Điểm tích lũy</span>
                         </div>
                         <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">1,250 <span className="text-sm font-medium text-slate-400">điểm</span></span>
@@ -263,7 +272,7 @@ export default function Profile() {
                                         <button
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
-                                            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 ${isSelected
+                                            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 active:scale-[0.97] ${isSelected
                                                 ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25"
                                                 : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-emerald-500 dark:hover:text-emerald-400"
                                                 }`}
@@ -282,8 +291,8 @@ export default function Profile() {
                                 })}
                             </nav>
                         </div>
-                        <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-800 p-6 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10">
-                            <div className="absolute right-0 bottom-0 text-7xl opacity-10 font-bold select-none">🏸</div>
+                        <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 to-emerald-800 p-6 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10">
+                            <div className="absolute right-0 bottom-0 opacity-10 select-none"><Target size={72} /></div>
                             <h3 className="font-extrabold text-sm mb-1 text-emerald-100 uppercase tracking-wide">Mẹo sân chơi hôm nay</h3>
                             <p className="text-xs text-slate-100 leading-relaxed">
                                 "Để tăng lực đập smash, hãy thư giãn cổ tay của bạn trước khi tiếp xúc cầu và chỉ siết chặt tay vào cán vợt ngay đúng khoảnh khắc chạm cầu!"
@@ -293,7 +302,8 @@ export default function Profile() {
 
                     {/* Cột phải Content */}
                     <div className="lg:col-span-8">
-                        <div className="tt-card bg-white dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 p-6 md:p-8 rounded-3xl shadow-md min-h-[500px]">
+                        <FadeIn>
+                            <div className="tt-card bg-white dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 p-6 md:p-8 rounded-3xl shadow-md min-h-[500px]">
                             {activeTab === "info" && (
                                 <ProfileInfo 
                                     userData={userData}
@@ -314,7 +324,9 @@ export default function Profile() {
                             )}
 
                             {activeTab === "orders" && (
-                                <ProfileOrders orders={orders} />
+                                <FadeIn delay={100}>
+                                    <ProfileOrders orders={orders} />
+                                </FadeIn>
                             )}
 
                             {activeTab === "courts" && (
@@ -324,7 +336,8 @@ export default function Profile() {
                             {activeTab === "security" && (
                                 <ProfileSecurity />
                             )}
-                        </div>
+                            </div>
+                        </FadeIn>
                     </div>
                 </div>
             </div>

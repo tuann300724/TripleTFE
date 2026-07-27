@@ -1,69 +1,16 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { Link } from "react-router-dom";
-
-/* CARD - GIỮ NGUYÊN TAILWIND */
-function CustomProductCard({ product }) {
-    const isOutOfStock = product.status === 2;
-    return (
-        <article className={`group tt-card-interactive flex h-full flex-col overflow-hidden ${isOutOfStock ? "opacity-60" : ""}`}>
-            <div className="relative aspect-square shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-700/80">
-                <img
-                    src={`${product.thumbnail}`}
-                    alt={product.productName}
-                    className="tt-img-zoom h-full w-full object-cover"
-                />
-
-                {isOutOfStock && (
-                    <span className="absolute left-3 top-3 rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white shadow-md">
-                        Hết hàng
-                    </span>
-                )}
-
-                {/* STOCK BADGE */}
-                {!isOutOfStock && (
-                    <span className="absolute right-3 top-3 rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white shadow-md">
-                        Còn {product.stock} sp
-                    </span>
-                )}
-            </div>
-
-            <div className="flex flex-1 flex-col p-5">
-                <p className="tt-label text-xs">{product.categoryName}</p>
-
-                <h3 className="mt-1 line-clamp-2 min-h-14 text-lg font-semibold text-slate-900 dark:text-slate-100">
-                    {product.productName}
-                </h3>
-
-                {/* PRICE */}
-                <div className="mt-3 flex min-h-8 flex-wrap items-baseline gap-2">
-                    {/* Giá lớn (Max Price) */}
-                    <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
-                        {product.maxPrice.toLocaleString("vi-VN")} đ
-                    </span>
-
-                    {/* Giá nhỏ hơn bên cạnh (Min Price) */}
-                    <span className="text-sm text-gray-500 line-through dark:text-gray-400">
-                        {product.minPrice.toLocaleString("vi-VN")} đ
-                    </span>
-                </div>
-
-                <Link
-                    to={`/product/${product.productId}`}
-                    className="tt-btn-dark mt-auto w-full py-2.5 text-sm text-center"
-                >
-                    Xem chi tiết
-                </Link>
-            </div>
-        </article>
-    );
-}
+import api from "../service/api";
+import ProductCard from "../components/ProductCard";
+import { Target } from "lucide-react";
+import { FadeIn } from "../components/Animate";
 
 /* PAGE */
 export default function Product() {
     const [products, setProducts] = useState([]);
     const [search, setSearch] = useState("");
     const [activeCategory, setActiveCategory] = useState("Tất cả");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // --- PHÂN TRANG STATE ---
     const [currentPage, setCurrentPage] = useState(1);
@@ -72,8 +19,8 @@ export default function Product() {
     /* FETCH API (Đã bỏ API Categories, gom cụm dữ liệu song song) */
     useEffect(() => {
         Promise.all([
-            axios.get("https://localhost:7147/api/Products"),
-            axios.get("https://localhost:7147/api/ProductVariants")
+            api.get("/Products"),
+            api.get("/ProductVariants")
         ])
             .then(([productsRes, variantsRes]) => {
                 const variants = variantsRes.data;
@@ -86,8 +33,12 @@ export default function Product() {
                     return { ...product, stock: totalStock };
                 });
                 setProducts(productsWithStock);
+                setLoading(false);
             })
-            .catch(err => console.log(err));
+            .catch(err => {
+                setError(err.message);
+                setLoading(false);
+            });
     }, []);
 
     // --- TỰ ĐỘNG TRÍCH XUẤT DANH MỤC KHÔNG TRÙNG NHAU (FRONTEND ONLY) ---
@@ -130,7 +81,8 @@ export default function Product() {
         <div>
             {/* HERO (GIỮ NGUYÊN) */}
             <section className="tt-hero">
-                <div className="mx-auto max-w-6xl">
+                <FadeIn>
+                    <div className="mx-auto max-w-6xl">
                     <span className="text-sm font-semibold uppercase tracking-widest text-emerald-400">
                         Sản phẩm
                     </span>
@@ -140,13 +92,15 @@ export default function Product() {
                     <p className="mt-4 max-w-2xl text-lg text-slate-300">
                         Vợt, giày, quả cầu, túi vợt và trang phục từ các thương hiệu hàng đầu thế giới.
                     </p>
-                </div>
+                    </div>
+                </FadeIn>
             </section>
 
             {/* FILTER & GRID */}
             <section className="mx-auto max-w-6xl px-6 py-12 md:px-12">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-wrap gap-2">
+                <FadeIn delay={50}>
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex flex-wrap gap-2">
                         <button
                             onClick={() => handleCategoryChange("Tất cả")}
                             className={`tt-chip ${activeCategory === "Tất cả" ? "tt-chip-active" : "tt-chip-inactive"}`}
@@ -172,29 +126,42 @@ export default function Product() {
                         onChange={handleSearchChange}
                         className="tt-input lg:max-w-xs"
                     />
-                </div>
+                    </div>
+                </FadeIn>
 
                 <p className="tt-muted mt-8 text-sm">
                     Hiển thị {filtered.length > 0 ? indexOfFirstItem + 1 : 0} - {indexOfLastItem > filtered.length ? filtered.length : indexOfLastItem} trong tổng số {filtered.length} sản phẩm tìm thấy
                 </p>
 
-                {/* GRID (Thay đổi render từ filtered thành currentItems) */}
-                {currentItems.length > 0 ? (
-                    <div className="mt-6 grid auto-rows-fr items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {currentItems.map((p) => (
-                            <CustomProductCard
-                                key={p.productId}
-                                product={p}
-                            />
-                        ))}
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+                    </div>
+                ) : error ? (
+                    <div className="rounded-2xl border border-dashed border-red-200 bg-red-50/50 py-16 text-center">
+                        <p className="text-red-500 font-medium">{error}</p>
+                        <button onClick={() => setError(null)} className="mt-3 text-sm text-emerald-600 hover:underline">Thử lại</button>
                     </div>
                 ) : (
-                    <div className="tt-card-interactive mt-16 p-12 text-center">
-                        <p className="text-5xl hover:scale-110 transition">🏸</p>
-                        <p className="tt-body mt-4 text-lg">
-                            Không tìm thấy sản phẩm phù hợp.
-                        </p>
-                    </div>
+                    <FadeIn delay={100}>
+                        {currentItems.length > 0 ? (
+                        <div className="mt-6 grid auto-rows-fr items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            {currentItems.map((p) => (
+                                <ProductCard
+                                    key={p.productId}
+                                    product={p}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="tt-card-interactive mt-16 p-12 text-center">
+                            <p className="hover:scale-105 transition"><Target className="h-12 w-12 mx-auto" /></p>
+                            <p className="tt-body mt-4 text-lg">
+                                Không tìm thấy sản phẩm phù hợp.
+                            </p>
+                        </div>
+                        )}
+                    </FadeIn>
                 )}
 
                 {/* --- THANH ĐIỀU HƯỚNG PHÂN TRANG --- */}

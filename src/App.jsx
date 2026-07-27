@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { ThemeProvider } from "./context/ThemeContext";
+import { ToastProvider } from "./components/Toast";
 
 
 
@@ -36,6 +37,7 @@ import Profile from "./pages/profile/Profile";
 import CourtBooking from "./pages/booking/CourtBooking";
 import UserCourtDetail from "./pages/booking/CourtDetail";
 import CourtDetailPage from "./pages/booking/CourtDetailPage";
+import NotFound from "./pages/NotFound";
 
 import Dashboard from "./admin/Dashboard";
 
@@ -68,6 +70,7 @@ function App() {
     return (
 
         <ThemeProvider>
+            <ToastProvider>
 
             <BrowserRouter>
 
@@ -106,9 +109,9 @@ function App() {
 
                         <Route path="/register" element={<Register />} />
 
+                        <Route path="*" element={<NotFound />} />
+
                     </Route>
-
-
 
 
 
@@ -144,7 +147,7 @@ function App() {
 
 
             </BrowserRouter>
-
+            </ToastProvider>
         </ThemeProvider>
 
     );

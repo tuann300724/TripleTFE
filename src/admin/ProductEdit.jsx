@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Package, Save, Tag, Trash2, Image as ImageIcon, Plus, Loader2, Upload } from "lucide-react";
+import { API_BASE } from "../config";
+import { useToast } from "../components/Toast";
 
 const inputClass =
     "w-full rounded-xl border border-slate-200/80 bg-white/80 px-4 py-2.5 text-sm outline-none transition-all duration-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 dark:border-slate-600 dark:bg-slate-800/80 dark:text-white";
@@ -9,6 +11,7 @@ const labelClass = "mb-2 block text-sm font-medium text-slate-700 dark:text-slat
 export default function ProductEdit() {
     const { id } = useParams(); // Lấy productId từ URL
     const navigate = useNavigate();
+    const toast = useToast();
 
     // --- STATE HỆ THỐNG ---
     const [categories, setCategories] = useState([]);
@@ -33,9 +36,9 @@ export default function ProductEdit() {
             try {
                 // Bước 1: Load danh mục, thương hiệu và thông tin Product cha trước
                 const [catRes, brandRes, productRes] = await Promise.all([
-                    fetch("https://localhost:7147/api/Categories"),
-                    fetch("https://localhost:7147/api/Brands"),
-                    fetch(`https://localhost:7147/api/Products/${id}`)
+                    fetch(API_BASE + "/Categories"),
+                    fetch(API_BASE + "/Brands"),
+                    fetch(API_BASE + `/Products/${id}`)
                 ]);
 
                 if (!productRes.ok) throw new Error("Không tìm thấy thông tin sản phẩm!");
@@ -67,7 +70,7 @@ export default function ProductEdit() {
                 setImages(initialImages);
 
                 // Bước 2: Gọi API ProductVariants để lấy danh sách biến thể theo ProductId này
-                const variantRes = await fetch(`https://localhost:7147/api/ProductVariants`);
+                const variantRes = await fetch(API_BASE + `/ProductVariants`);
                 if (variantRes.ok) {
                     const allVariants = await variantRes.json();
                     
@@ -95,7 +98,7 @@ export default function ProductEdit() {
                 setIsPageLoading(false);
             } catch (err) {
                 console.error("Lỗi khởi tạo dữ liệu form:", err);
-                alert(err.message || "Gặp sự cố khi kết nối máy chủ!");
+                toast(err.message || "Gặp sự cố khi kết nối máy chủ!", "error");
                 navigate("/admin/products");
             }
         };
@@ -112,7 +115,7 @@ export default function ProductEdit() {
         const targetVariant = variants[index];
         
         if (variants.length === 1) {
-            alert("Sản phẩm bắt buộc phải duy trì ít nhất một cấu hình biến thể!");
+            toast("Sản phẩm bắt buộc phải duy trì ít nhất một cấu hình biến thể!", "error");
             return;
         }
 
@@ -120,13 +123,13 @@ export default function ProductEdit() {
         if (targetVariant.variantId) {
             if (window.confirm("Biến thể này đã lưu trên hệ thống, bạn có chắc chắn muốn XÓA hẳn không?")) {
                 try {
-                    const res = await fetch(`https://localhost:7147/api/ProductVariants/${targetVariant.variantId}`, {
+                    const res = await fetch(API_BASE + `/ProductVariants/${targetVariant.variantId}`, {
                         method: "DELETE"
                     });
                     if (!res.ok) throw new Error("Không thể xóa biến thể này trên Database!");
-                    alert("Đã xóa biến thể thành công!");
+                    toast("Đã xóa biến thể thành công!", "success");
                 } catch (err) {
-                    alert(err.message);
+                    toast(err.message, "error");
                     return; // Dừng lại không xóa trên UI nếu API lỗi
                 }
             } else {
@@ -148,7 +151,7 @@ export default function ProductEdit() {
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
         if (images.length + files.length > 5) {
-            alert("Tải lên tối đa 5 hình ảnh!");
+            toast("Tải lên tối đa 5 hình ảnh!", "error");
             return;
         }
         const newImages = files.map((file) => ({
@@ -174,11 +177,11 @@ export default function ProductEdit() {
         e.preventDefault();
 
         if (!productName || !brandId || !categoryId) {
-            alert("Vui lòng điền đầy đủ thông tin bắt buộc!");
+            toast("Vui lòng điền đầy đủ thông tin bắt buộc!", "error");
             return;
         }
         if (!variants.every(v => v.price && v.stock)) {
-            alert("Vui lòng điền đầy đủ Giá bán và Tồn kho cho toàn bộ biến thể!");
+            toast("Vui lòng điền đầy đủ Giá bán và Tồn kho cho toàn bộ biến thể!", "error");
             return;
         }
 
@@ -201,7 +204,7 @@ export default function ProductEdit() {
                 });
             }
 
-            const productResponse = await fetch(`https://localhost:7147/api/Products/${id}`, {
+            const productResponse = await fetch(API_BASE + `/Products/${id}`, {
                 method: "PUT",
                 body: formData,
             });
@@ -223,8 +226,8 @@ export default function ProductEdit() {
                 // Phân biệt: Nếu có variantId thì chạy PUT sửa dòng cũ, không có thì chạy POST tạo dòng mới
                 const hasId = !!variant.variantId;
                 const url = hasId 
-                    ? `https://localhost:7147/api/ProductVariants/${variant.variantId}`
-                    : `https://localhost:7147/api/ProductVariants`;
+                    ? API_BASE + `/ProductVariants/${variant.variantId}`
+                    : API_BASE + `/ProductVariants`;
 
                 return fetch(url, {
                     method: hasId ? "PUT" : "POST",
@@ -239,12 +242,12 @@ export default function ProductEdit() {
             // Đợi tất cả các tiến trình sửa/thêm biến thể con hoàn tất thành công
             await Promise.all(variantPromises);
 
-            alert("Đã cập nhật toàn bộ sản phẩm và danh sách biến thể thành công!");
+            toast("Đã cập nhật toàn bộ sản phẩm và danh sách biến thể thành công!", "success");
             navigate("/admin/products");
 
         } catch (error) {
             console.error(error);
-            alert(error.message || "Hệ thống gặp sự cố khi lưu dữ liệu!");
+            toast(error.message || "Hệ thống gặp sự cố khi lưu dữ liệu!", "error");
         } finally {
             setIsSubmitting(false);
         }

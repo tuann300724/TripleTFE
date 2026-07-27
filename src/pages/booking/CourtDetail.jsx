@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
-    MapPin, Clock, Phone, Star, ArrowLeft, Calendar,
+    MapPin, Clock, Phone, ArrowLeft,
     CheckCircle2, ChevronRight, Layers, Wifi, ShowerHead,
     Coffee, Car, Lightbulb, Users, Trophy, Sparkles, XCircle,
-    User, Mail, FileText, CreditCard, ChevronLeft, Eye
+    User, Mail, FileText, CreditCard, ChevronLeft, Eye,
+    Target, Info, X
 } from "lucide-react";
 import { 
     branchesData, 
     mockedBookedSlots, 
     timeSlots 
 } from "./bookingData";
-import { useTheme } from "../../context/ThemeContext";
 
 const amenityIcon = (name) => {
     if (name.includes("WiFi"))   return <Wifi size={13} className="text-emerald-500 dark:text-emerald-400" />;
@@ -26,7 +26,6 @@ const amenityIcon = (name) => {
 export default function CourtDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { theme } = useTheme();
 
     const branch = branchesData.find(b => b.id === id);
 
@@ -117,7 +116,7 @@ export default function CourtDetailPage() {
             {/* ══ CONTAINER CHÍNH ══ */}
             <div className="max-w-[1000px] mx-auto px-4 -mt-20 relative z-20">
                 {/* ── TIÊU ĐỀ CHI NHÁNH ── */}
-                <div className="mb-6 animate-fade-in-up">
+                <div className="mb-6 animate-[fadeUp_0.4s_ease]">
                     <h1 className="text-slate-900 dark:text-white text-2xl md:text-3xl font-extrabold leading-snug drop-shadow-md">
                         {branch.name}
                     </h1>
@@ -149,10 +148,10 @@ export default function CourtDetailPage() {
                 {/* ── THANH NAV TABS ── */}
                 <div className="flex gap-1 bg-slate-200/50 border border-slate-250 dark:bg-white/5 dark:border-white/5 rounded-2xl p-1.5 mb-8 w-fit overflow-x-auto">
                     {[
-                        { key: "booking", label: "🏸 Đặt lịch ngay" },
+                        { key: "booking", label: <><Target size={14} className="inline" /> Đặt lịch ngay</> },
                         { key: "form", label: "📋 Thông tin người đặt" },
                         { key: "gallery", label: "📸 Hình ảnh thực tế" },
-                        { key: "info", label: "ℹ️ Tiện ích & Sân con" }
+                        { key: "info", label: <><Info size={14} className="inline" /> Tiện ích & Sân con</> }
                     ].map(tab => (
                         <button
                             key={tab.key}
@@ -425,7 +424,7 @@ export default function CourtDetailPage() {
                             <div className="flex flex-col gap-3">
                                 <div className="flex justify-between items-start text-xs gap-3">
                                     <span className="text-slate-500 dark:text-slate-400 font-bold shrink-0">Chi nhánh:</span>
-                                    <span className="text-slate-900 dark:text-white font-extrabold text-right leading-relaxed">{branch.name}</span>
+                                    <span className="text-slate-900 dark:text-white font-extrabold text-right leading-7">{branch.name}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-xs gap-3">
                                     <span className="text-slate-500 dark:text-slate-400 font-bold">Ngày chơi:</span>
@@ -507,7 +506,7 @@ export default function CourtDetailPage() {
                             <h2 className="text-slate-950 dark:text-white text-sm font-black uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 dark:border-white/5 pb-2.5">
                                 <Layers size={14} className="text-emerald-500 dark:text-emerald-400" /> Giới thiệu chi nhánh
                             </h2>
-                            <p className="text-slate-655 dark:text-slate-400 text-xs leading-relaxed leading-7 m-0 font-medium">
+                            <p className="text-slate-655 dark:text-slate-400 text-xs leading-7 m-0 font-medium">
                                 {branch.description}
                             </p>
                         </div>
@@ -519,7 +518,7 @@ export default function CourtDetailPage() {
                             </h2>
                             <div className="grid grid-cols-2 gap-2">
                                 {(branch.amenities || []).map((a, i) => (
-                                    <div key={i} className="flex items-center gap-2 bg-slate-50 border border-slate-150 dark:bg-[#08101a] dark:border-white/5 rounded-xl py-2 px-3 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold shadow-sm animate-fade-in">
+                                    <div key={i} className="flex items-center gap-2 bg-slate-50 border border-slate-150 dark:bg-[#08101a] dark:border-white/5 rounded-xl py-2 px-3 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold shadow-sm animate-[fadeUp_0.3s_ease-out]">
                                         <span className="text-emerald-500 dark:text-emerald-400 shrink-0">{amenityIcon(a)}</span>
                                         <span className="truncate">{a}</span>
                                     </div>
@@ -550,13 +549,13 @@ export default function CourtDetailPage() {
             {lightboxImage && (
                 <div
                     onClick={() => setLightboxImage(null)}
-                    className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out animate-fade-in"
+                    className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out animate-[fadeUp_0.3s_ease-out]"
                 >
                     <button
                         onClick={() => setLightboxImage(null)}
                         className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white font-extrabold w-10 h-10 rounded-full flex items-center justify-center transition-colors text-lg"
                     >
-                        ✕
+                        <X size={20} />
                     </button>
                     <img
                         src={lightboxImage}

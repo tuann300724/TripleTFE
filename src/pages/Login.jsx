@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../service/api";
+import { FadeIn } from "../components/Animate";
+
 
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
@@ -15,14 +17,14 @@ export default function Login() {
         setError("");
         setLoading(true);
         try {
-            const res = await axios.post("https://localhost:7147/api/User/login", {
-                email,
-                password
-            });
-            localStorage.setItem("user", JSON.stringify(res.data));
+            const res = await api.post("/User/login", { email, password });
+            const userData = { ...res.data };
+            delete userData.passwordHash;
+            delete userData.PasswordHash;
+            localStorage.setItem("user", JSON.stringify(userData));
             setLoading(false);
             navigate("/");
-        } catch (err) {
+        } catch {
             setLoading(false);
             setError("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
         }
@@ -46,7 +48,8 @@ export default function Login() {
 
             <div className="relative w-full max-w-md space-y-8">
                 {/* Card */}
-                <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-3xl p-8 shadow-xl dark:shadow-2xl space-y-6 transition-colors duration-300">
+                <FadeIn>
+                    <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-3xl p-8 shadow-xl dark:shadow-2xl space-y-6 transition-colors duration-300">
                     {/* Header */}
                     <div className="flex flex-col items-center">
                         <Link to="/" className="flex items-center gap-2">
@@ -138,7 +141,7 @@ export default function Login() {
 
                         <button
                             type="submit"
-                            className="tt-hover-scale flex w-full items-center justify-center rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-500 transition-all duration-300 disabled:opacity-60"
+                            className="tt-btn-primary w-full py-3 disabled:opacity-60"
                             disabled={loading}
                         >
                             {loading ? "Đang đăng nhập..." : "Đăng nhập"}
@@ -178,7 +181,8 @@ export default function Login() {
                             Đăng ký ngay
                         </Link>
                     </div>
-                </div>
+                    </div>
+                </FadeIn>
             </div>
         </div>
     );

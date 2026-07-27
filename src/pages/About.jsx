@@ -1,11 +1,6 @@
 import { Link } from "react-router-dom";
-
-const stats = [
-    { value: "8+", label: "Năm kinh nghiệm" },
-    { value: "15K+", label: "Khách hàng tin tưởng" },
-    { value: "500+", label: "Sản phẩm" },
-    { value: "3", label: "Chi nhánh" },
-];
+import { MapPin } from "lucide-react";
+import { FadeIn, CountUp } from "../components/Animate";
 
 const team = [
     {
@@ -26,7 +21,7 @@ const team = [
 ];
 
 const contactItems = [
-    { icon: "📍", title: "Địa chỉ", value: "Biên Hoà, Đồng Nai" },
+    { icon: <MapPin size={16} className="inline" />, title: "Địa chỉ", value: "Biên Hoà, Đồng Nai" },
     { icon: "📞", title: "Hotline", value: "0352 164 808" },
     { icon: "✉️", title: "Email", value: "Tuantran652003@triplet.vn" },
 ];
@@ -35,7 +30,8 @@ export default function About() {
     return (
         <div>
             <section className="tt-hero">
-                <div className="mx-auto max-w-6xl">
+                <FadeIn>
+                    <div className="mx-auto max-w-6xl">
                     <span className="text-sm font-semibold uppercase tracking-widest text-emerald-400">
                         Giới thiệu
                     </span>
@@ -43,11 +39,13 @@ export default function About() {
                     <p className="mt-4 max-w-2xl text-lg text-slate-300">
                         Đam mê cầu lông — phục vụ cộng đồng yêu thể thao với sản phẩm chất lượng và dịch vụ tận tâm.
                     </p>
-                </div>
+                    </div>
+                </FadeIn>
             </section>
 
             <section className="mx-auto max-w-6xl px-6 py-16 md:px-12">
-                <div className="grid items-center gap-12 lg:grid-cols-2">
+                <FadeIn delay={100}>
+                    <div className="grid items-center gap-12 lg:grid-cols-2">
                     <div className="group tt-card-interactive overflow-hidden rounded-3xl">
                         <img
                             src="https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&q=80"
@@ -71,22 +69,36 @@ export default function About() {
                             Khám phá sản phẩm
                         </Link>
                     </div>
-                </div>
+                    </div>
+                </FadeIn>
             </section>
 
             <section className="bg-emerald-600 py-14 text-white dark:bg-emerald-700/90">
-                <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 md:grid-cols-4 md:px-12">
-                    {stats.map((s) => (
-                        <div key={s.label} className="tt-stat">
-                            <p className="text-4xl font-extrabold">{s.value}</p>
-                            <p className="mt-1 text-emerald-100">{s.label}</p>
-                        </div>
-                    ))}
-                </div>
+                <FadeIn delay={200}>
+                    <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 md:grid-cols-4 md:px-12">
+                    <div className="tt-stat">
+                        <p className="text-4xl font-extrabold"><CountUp to={8} suffix="+" /></p>
+                        <p className="mt-1 text-emerald-100">Năm kinh nghiệm</p>
+                    </div>
+                    <div className="tt-stat">
+                        <p className="text-4xl font-extrabold"><CountUp to={15} suffix="K+" /></p>
+                        <p className="mt-1 text-emerald-100">Khách hàng tin tưởng</p>
+                    </div>
+                    <div className="tt-stat">
+                        <p className="text-4xl font-extrabold"><CountUp to={500} suffix="+" /></p>
+                        <p className="mt-1 text-emerald-100">Sản phẩm</p>
+                    </div>
+                    <div className="tt-stat">
+                        <p className="text-4xl font-extrabold"><CountUp to={6} suffix="" /></p>
+                        <p className="mt-1 text-emerald-100">Chi nhánh</p>
+                    </div>
+                    </div>
+                </FadeIn>
             </section>
 
             <section className="mx-auto max-w-6xl px-6 py-16 md:px-12">
-                <div className="text-center">
+                <FadeIn delay={300}>
+                    <div className="text-center">
                     <span className="tt-label">Đội ngũ</span>
                     <h2 className="tt-title mt-1">Những người đồng hành</h2>
                 </div>
@@ -110,11 +122,13 @@ export default function About() {
                             </div>
                         </div>
                     ))}
-                </div>
+                    </div>
+                </FadeIn>
             </section>
 
             <section className="mx-auto max-w-6xl px-6 pb-20 md:px-12">
-                <div className="tt-surface tt-hover-lift">
+                <FadeIn delay={400}>
+                    <div className="tt-surface tt-hover-lift">
                     <h2 className="tt-heading">Liên hệ với chúng tôi</h2>
                     <div className="mt-6 grid gap-6 md:grid-cols-3">
                         {contactItems.map((item) => (
@@ -129,7 +143,8 @@ export default function About() {
                             </div>
                         ))}
                     </div>
-                </div>
+                    </div>
+                </FadeIn>
             </section>
         </div>
     );

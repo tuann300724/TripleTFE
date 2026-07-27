@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import axios from "axios";
+import api from "../service/api";
+import { FadeIn } from "../components/Animate";
 
 export default function Success() {
     const location = useLocation();
@@ -43,13 +44,13 @@ export default function Success() {
                     const finalizeMomoOrder = async () => {
                         try {
                             // 🔥 2. GỌI API BACKEND ĐỂ CHUYỂN "Waiting" -> "Success"
-                            await axios.patch(`https://localhost:7147/api/Payments/ConfirmMomo/${parsedData.order.orderId}`);
+                            await api.patch(`/Payments/ConfirmMomo/${parsedData.order.orderId}`);
                             console.log("Backend chốt đơn MoMo thành công!");
 
                             // 🔥 3. CHẠY TIẾP LUỒNG XÓA GIỎ HÀNG
                             for (const item of parsedData.items) {
-                                await axios.delete(
-                                    `https://localhost:7147/api/CartItems/${item.cartItemId}`
+                                await api.delete(
+                                    `/CartItems/${item.cartItemId}`
                                 );
                             }
                             console.log("Đã dọn sạch Cart Items.");
@@ -119,7 +120,7 @@ export default function Success() {
     const { order, items, shippingInfo, paymentMethod } = orderData;
 
     // DATE FORMAT
-    const currentDate = new Date(order.orderDate || Date.now()).toLocaleDateString("vi-VN", {
+    const currentDate = new Date(order.orderDate || new Date()).toLocaleDateString("vi-VN", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -128,6 +129,7 @@ export default function Success() {
     return (
         <div className="bg-slate-50 dark:bg-[#0c1219] py-16 transition-colors duration-300 min-h-[80vh] flex items-center justify-center">
             <div className="mx-auto max-w-2xl px-6 w-full text-center">
+                <FadeIn>
 
                 {/* STEP */}
                 <div className="flex justify-center items-center mb-10 max-w-xs mx-auto">
@@ -236,11 +238,11 @@ export default function Success() {
                     <Link to="/product" className="tt-btn-primary px-8 py-3.5 shadow-lg shadow-emerald-500/20 font-bold">
                         Tiếp tục mua sắm
                     </Link>
-                    <Link to="/" className="tt-btn-ghost px-8 py-3.5 border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <Link to="/" className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-8 py-3.5 text-slate-700 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-100 hover:shadow-lg active:translate-y-0 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:bg-slate-800 font-bold">
                         Quay lại trang chủ
                     </Link>
                 </div>
-
+                </FadeIn>
             </div>
         </div>
     );

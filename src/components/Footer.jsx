@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
+import { MapPin } from "lucide-react";
 
 export default function Footer() {
     return (
-        <footer className="bg-slate-800 text-slate-300 dark:bg-[#080d14] dark:text-slate-400">
+        <footer className="bg-slate-800 text-slate-200 dark:bg-[#080d14] dark:text-slate-400">
             <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 md:grid-cols-4">
                 <div className="md:col-span-2">
                     <Link to="/" className="tt-logo flex items-center gap-2 text-white">
@@ -23,17 +24,17 @@ export default function Footer() {
                     <h4 className="font-semibold text-white">Liên kết</h4>
                     <ul className="mt-4 space-y-2 text-sm">
                         <li>
-                            <Link to="/product" className="tt-hover-glow inline-block">
+                            <Link to="/product" className="tt-hover-glow inline-block transition-all duration-300 hover:translate-x-0.5">
                                 Sản phẩm
                             </Link>
                         </li>
                         <li>
-                            <Link to="/about" className="tt-hover-glow inline-block">
+                            <Link to="/about" className="tt-hover-glow inline-block transition-all duration-300 hover:translate-x-0.5">
                                 Giới thiệu
                             </Link>
                         </li>
                         <li>
-                            <Link to="/news" className="tt-hover-glow inline-block">
+                            <Link to="/news" className="tt-hover-glow inline-block transition-all duration-300 hover:translate-x-0.5">
                                 Tin tức
                             </Link>
                         </li>
@@ -43,9 +44,9 @@ export default function Footer() {
                 <div>
                     <h4 className="font-semibold text-white">Liên hệ</h4>
                     <ul className="mt-4 space-y-2 text-sm">
-                        <li className="tt-hover-glow cursor-default">📍 Biên Hoà, Đồng Nai, Việt Nam</li>
-                        <li className="tt-hover-glow cursor-default">📞 0352 164 808</li>
-                        <li className="tt-hover-glow cursor-default">✉️ Tuantran652003@triplet.vn</li>
+                        <li className="tt-hover-glow cursor-default transition-all duration-300 hover:translate-x-0.5"><MapPin size={14} className="inline" /> Biên Hoà, Đồng Nai, Việt Nam</li>
+                        <li className="tt-hover-glow cursor-default transition-all duration-300 hover:translate-x-0.5">📞 0352 164 808</li>
+                        <li className="tt-hover-glow cursor-default transition-all duration-300 hover:translate-x-0.5">✉️ Tuantran652003@triplet.vn</li>
                     </ul>
                 </div>
             </div>

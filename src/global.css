@@ -178,3 +178,8 @@
                hover:-translate-y-1 hover:scale-105;
     }
 }
+
+@keyframes slideUpToast {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}

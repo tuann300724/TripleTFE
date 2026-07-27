@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
 export default function NewsCard({ article, featured = false }) {
     if (featured) {
@@ -21,7 +22,7 @@ export default function NewsCard({ article, featured = false }) {
                     <div className="mt-4 flex items-center justify-between">
                         <span className="text-sm text-slate-400">{article.date}</span>
                         <Link to="/news" className="tt-link text-sm">
-                            Đọc thêm →
+                            Đọc thêm <ArrowRight size={14} className="inline" />
                         </Link>
                     </div>
                 </div>
@@ -44,7 +45,7 @@ export default function NewsCard({ article, featured = false }) {
                 </h3>
                 <p className="tt-body mt-2 line-clamp-3 text-sm">{article.excerpt}</p>
                 <Link to="/news" className="tt-link mt-4 inline-flex text-sm">
-                    Đọc thêm →
+                    Đọc thêm <ArrowRight size={14} className="inline" />
                 </Link>
             </div>
         </article>

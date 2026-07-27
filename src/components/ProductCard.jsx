@@ -4,7 +4,7 @@ export default function ProductCard({ product }) {
     const isOutOfStock = product.status === 2;
 
     return (
-        <article className={`group tt-card-interactive flex h-full flex-col overflow-hidden ${isOutOfStock ? "opacity-60" : ""}`}>
+        <article className={`group tt-card-interactive flex h-full flex-col overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-lg ${isOutOfStock ? "opacity-60" : ""}`}>
 
             {/* IMAGE */}
             <div className="relative aspect-square shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-700/80">

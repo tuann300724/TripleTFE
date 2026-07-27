@@ -4,10 +4,9 @@ import {
     MapPin, Clock, Phone, Star, ArrowLeft,
     CheckCircle2, ChevronRight, Wifi, ShowerHead,
     Coffee, Car, Lightbulb, Users, Trophy, Sparkles, XCircle,
-    Eye, ThumbsUp, MessageSquare
+    Eye, ThumbsUp, MessageSquare, Zap, X
 } from "lucide-react";
 import { branchesData } from "./bookingData";
-import { useTheme } from "../../context/ThemeContext";
 
 const amenityIcon = (name) => {
     if (name.includes("WiFi")) return <Wifi size={14} className="text-emerald-500 dark:text-emerald-400" />;
@@ -22,7 +21,6 @@ const amenityIcon = (name) => {
 export default function CourtDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { theme } = useTheme();
 
     const branch = branchesData.find(b => b.id === id);
     const [lightboxImage, setLightboxImage] = useState(null);
@@ -289,7 +287,7 @@ export default function CourtDetailPage() {
                                 onClick={() => navigate(`/booking/${branch.id}/book`)}
                                 className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 dark:text-slate-950 font-black text-xs rounded-xl tracking-wider shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-98 cursor-pointer flex items-center justify-center gap-2 mt-2 uppercase border-0 font-sans"
                             >
-                                ⚡ Đặt lịch chơi ngay <ChevronRight size={14} />
+                                <Zap size={14} className="inline" /> Đặt lịch chơi ngay <ChevronRight size={14} />
                             </button>
                         </div>
                     </div>
@@ -300,13 +298,13 @@ export default function CourtDetailPage() {
             {lightboxImage && (
                 <div
                     onClick={() => setLightboxImage(null)}
-                    className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out animate-fade-in"
+                    className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out animate-[fadeUp_0.3s_ease]"
                 >
                     <button
                         onClick={() => setLightboxImage(null)}
                         className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white font-extrabold w-10 h-10 rounded-full flex items-center justify-center transition-colors text-lg"
                     >
-                        ✕
+                        <X size={20} />
                     </button>
                     <img
                         src={lightboxImage}

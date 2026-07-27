@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { Target } from "lucide-react";
+import { useToast } from "../../components/Toast";
 
 export default function ProfileCourtsCreate({ onBack }) {
+    const toast = useToast();
     // 1. Basic Info
     const [courtName, setCourtName] = useState("");
     const [description, setDescription] = useState("");
@@ -12,7 +15,7 @@ export default function ProfileCourtsCreate({ onBack }) {
 
     // TimeSlots
     const [timeSlots, setTimeSlots] = useState([
-        { id: Date.now(), startTime: "05:00", endTime: "22:00", price: "" }
+        { id: 1, startTime: "05:00", endTime: "22:00", price: "" }
     ]);
 
     // Thumbnail
@@ -40,7 +43,7 @@ export default function ProfileCourtsCreate({ onBack }) {
         { id: "Wifi", name: "Wifi miễn phí", icon: "📶" },
         { id: "Bãi để xe", name: "Bãi để xe", icon: "🅿️" },
         { id: "Căn tin", name: "Căn tin/Nước giải khát", icon: "🥤" },
-        { id: "Thuê vợt", name: "Thuê vợt/Cầu", icon: "🏸" },
+        { id: "Thuê vợt", name: "Thuê vợt/Cầu", icon: <Target size={20} /> },
         { id: "Điều hòa", name: "Quạt/Điều hòa", icon: "❄️" },
         { id: "Tủ đồ", name: "Tủ đồ cá nhân", icon: "🗄️" },
     ];
@@ -160,12 +163,12 @@ export default function ProfileCourtsCreate({ onBack }) {
         e.preventDefault();
         
         if (!selectedProvince || !selectedDistrict || !selectedWard || !detailAddress) {
-            alert("Vui lòng nhập đầy đủ địa chỉ sân!");
+            toast("Vui lòng nhập đầy đủ địa chỉ sân!", "error");
             return;
         }
 
         if (!thumbnail) {
-            alert("Vui lòng tải lên ảnh đại diện (Thumbnail) cho cụm sân!");
+            toast("Vui lòng tải lên ảnh đại diện (Thumbnail) cho cụm sân!", "error");
             return;
         }
 
@@ -173,11 +176,11 @@ export default function ProfileCourtsCreate({ onBack }) {
         for (let i = 0; i < timeSlots.length; i++) {
             const slot = timeSlots[i];
             if (!slot.price || parseFloat(slot.price) <= 0) {
-                alert(`Vui lòng nhập giá hợp lệ cho khung giờ ${slot.startTime} - ${slot.endTime}`);
+                toast(`Vui lòng nhập giá hợp lệ cho khung giờ ${slot.startTime} - ${slot.endTime}`, "error");
                 return;
             }
             if (slot.startTime >= slot.endTime) {
-                alert(`Khung giờ ${slot.startTime} - ${slot.endTime} không hợp lệ (Giờ bắt đầu phải nhỏ hơn giờ kết thúc)`);
+                toast(`Khung giờ ${slot.startTime} - ${slot.endTime} không hợp lệ (Giờ bắt đầu phải nhỏ hơn giờ kết thúc)`, "error");
                 return;
             }
         }
@@ -215,7 +218,7 @@ export default function ProfileCourtsCreate({ onBack }) {
         // Mock API Call
         setTimeout(() => {
             setIsSubmitting(false);
-            alert("Tạo sân thành công! Dữ liệu đang được chờ phê duyệt bởi admin.");
+            toast("Tạo sân thành công! Dữ liệu đang được chờ phê duyệt bởi admin.", "success");
             onBack();
         }, 1500);
     };
@@ -400,7 +403,7 @@ export default function ProfileCourtsCreate({ onBack }) {
                     </h4>
                     
                     <div className="space-y-3">
-                        {timeSlots.map((slot, index) => (
+                        {timeSlots.map((slot) => (
                             <div key={slot.id} className="flex flex-wrap md:flex-nowrap items-center gap-3 bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                                 <div className="flex items-center gap-2 w-full md:w-auto">
                                     <span className="text-xs font-bold text-slate-400">Từ</span>
@@ -521,7 +524,6 @@ export default function ProfileCourtsCreate({ onBack }) {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {[0, 1, 2, 3].map((slotIdx) => {
                             const preview = galleryPreviews[slotIdx];
-                            const file    = galleryFiles[slotIdx];
                             return preview ? (
                                 // Slot đã có ảnh — hiển thị preview + nút xóa
                                 <div key={slotIdx} className="relative group rounded-xl overflow-hidden aspect-video border border-emerald-300 dark:border-emerald-700 shadow-sm">

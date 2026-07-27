@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Save, Image } from "lucide-react";
-import AdminSidebar from "./components/AdminSidebar";
-import axios from "axios";
+import api from "../service/api";
+import { useToast } from "../components/Toast";
 
 // 1. Nhập React Quill và file CSS giao diện của nó
 import ReactQuill from "react-quill-new";
@@ -10,6 +10,7 @@ import "react-quill-new/dist/quill.snow.css";
 
 export default function AddNews() {
     const navigate = useNavigate();
+    const toast = useToast();
     const [title, setTitle] = useState("");
     const [content, setContent] = useState(""); // Lưu chuỗi HTML bao gồm chữ định dạng và ảnh chèn thêm
     const [imageFile, setImageFile] = useState(null); // Ảnh bìa chính (Thumbnail)
@@ -43,7 +44,7 @@ export default function AddNews() {
         
         // Kiểm tra nội dung rỗng (Quill khi rỗng sẽ là "<p><br></p>")
         if (!title.trim() || !content.trim() || content === "<p><br></p>") {
-            alert("Vui lòng nhập đầy đủ tiêu đề và nội dung bài viết!");
+            toast("Vui lòng nhập đầy đủ tiêu đề và nội dung bài viết!", "error");
             return;
         }
 
@@ -59,25 +60,23 @@ export default function AddNews() {
         }
 
         try {
-            const response = await axios.post("https://localhost:7147/api/News", formData);
+            const response = await api.post("/News", formData);
 
             if (response.status === 200 || response.status === 201) {
-                alert("Đăng bài viết thành công!");
+                toast("Đăng bài viết thành công!", "success");
                 navigate("/admin/news");
             }
         } catch (error) {
             console.error("Lỗi gửi bài viết:", error);
             const serverError = error.response?.data?.errors || error.response?.data || error.message;
-            alert("Lỗi từ Server: " + JSON.stringify(serverError));
+            toast("Lỗi từ Server: " + JSON.stringify(serverError), "error");
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="flex">
-            <AdminSidebar />
-            <div className="flex-1 p-6 bg-slate-50 dark:bg-slate-900 min-h-screen">
+        <div className="flex-1 p-6 bg-slate-50 dark:bg-slate-900 min-h-screen">
                 <div className="mb-6">
                     <Link to="/admin/news" className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-emerald-600 transition-colors">
                         <ArrowLeft className="h-4 w-4" /> Quay lại quản lý tin tức
@@ -146,13 +145,12 @@ export default function AddNews() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow transition disabled:opacity-50"
+                            className="tt-btn-primary gap-2 px-5 py-2.5 disabled:opacity-50"
                         >
                             <Save className="h-4 w-4" /> {isSubmitting ? "Đang lưu..." : "Đăng bài viết"}
                         </button>
                     </div>
                 </form>
             </div>
-        </div>
     );
 }

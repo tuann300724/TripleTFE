@@ -1,10 +1,13 @@
-import AdminSidebar from "./components/AdminSidebar";
+
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom"; // useParams dùng để lấy ID trên URL
+import { useNavigate, useParams } from "react-router-dom";
+import { API_BASE } from "../config";
+import { useToast } from "../components/Toast";
 
 export default function CategoryEdit() {
     const { id } = useParams(); // Lấy trực tiếp tham số ID từ URL /edit/:id
     const navigate = useNavigate();
+    const toast = useToast();
 
     const [categoryName, setCategoryName] = useState("");
     const [description, setDescription] = useState("");
@@ -15,13 +18,13 @@ export default function CategoryEdit() {
     useEffect(() => {
         const fetchDetail = async () => {
             try {
-                const response = await fetch(`https://localhost:7147/api/Categories/${id}`);
+                const response = await fetch(API_BASE + `/Categories/${id}`);
                 if (!response.ok) throw new Error("Không lấy được thông tin chi tiết danh mục");
                 const data = await response.json();
                 setCategoryName(data.categoryName);
                 setDescription(data.description || "");
             } catch (err) {
-                alert(err.message);
+toast(err.message, "error");
                 navigate("/admin/categories");
             } finally {
                 setLoading(false);
@@ -34,7 +37,7 @@ export default function CategoryEdit() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const response = await fetch(`https://localhost:7147/api/Categories/${id}`, {
+            const response = await fetch(API_BASE + `/Categories/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -45,21 +48,21 @@ export default function CategoryEdit() {
             });
 
             if (!response.ok) throw new Error("Cập nhật thất bại");
-            alert("Cập nhật danh mục thành công!");
+            toast("Cập nhật danh mục thành công!", "success");
             navigate("/admin/categories");
         } catch (err) {
-            alert(err.message);
+            toast(err.message, "error");
         } finally {
             setSubmitting(false);
         }
     };
 
-    if (loading) return <div className="p-6 text-center">Đang tải thông tin danh mục...</div>;
+    if (loading) return (
+        <div className="p-6 text-center text-slate-500">Đang tải thông tin danh mục...</div>
+    );
 
     return (
-        <div className="flex">
-            <AdminSidebar />
-            <div className="flex-1 p-6">
+        <div className="flex-1 p-6">
                 <div className="max-w-xl rounded-xl bg-white p-6 shadow dark:bg-slate-800">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Chỉnh sửa danh mục (ID: {id})</h2>
                     
@@ -85,13 +88,12 @@ export default function CategoryEdit() {
                         </div>
                         <div className="flex gap-2 pt-4">
                             <button type="button" onClick={() => navigate("/admin/categories")} className="rounded-lg border px-4 py-2 text-sm font-medium">Hủy</button>
-                            <button type="submit" disabled={submitting} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+                            <button type="submit" disabled={submitting} className="tt-btn-primary text-sm px-4 py-2 disabled:opacity-50">
                                 {submitting ? "Đang lưu..." : "Lưu thay đổi"}
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
-        </div>
     );
 }

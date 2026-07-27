@@ -1,9 +1,8 @@
-// axios instance for API calls
 import axios from "axios";
+import { API_BASE } from "../config";
 
 const api = axios.create({
-  baseURL: "https://localhost:7147/api/",
-  // You can add headers or interceptors here if needed
+  baseURL: API_BASE + "/",
 });
 
 export default api;

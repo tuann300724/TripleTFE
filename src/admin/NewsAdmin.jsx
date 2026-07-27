@@ -1,16 +1,18 @@
 import { Newspaper } from "lucide-react";
+import { API_BASE } from "../config";
 
 
-import AdminSidebar from "./components/AdminSidebar";
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../components/Toast";
 
 export default function NewsAdmin() {
-    const columns = ["Hình ảnh", "Tiêu đề", "Ngày đăng", "Thao tác"];
     const [newsList, setNewsList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+    const toast = useToast();
 
     const formatDate = (dateString) => {
         if (!dateString) return "";
@@ -30,7 +32,7 @@ export default function NewsAdmin() {
 
     const fetchNews = async () => {
         try {
-            const response = await fetch("https://localhost:7147/api/News");
+            const response = await fetch(API_BASE + "/News");
             if (!response.ok) {
                 throw new Error("Không thể lấy dữ liệu tin tức từ server");
             }
@@ -53,7 +55,7 @@ export default function NewsAdmin() {
         if (!confirmDelete) return;
 
         try {
-            const response = await fetch(`https://localhost:7147/api/News/${news.newsId}`, {
+            const response = await fetch(API_BASE + `/News/${news.newsId}`, {
                 method: "DELETE",
             });
 
@@ -61,17 +63,15 @@ export default function NewsAdmin() {
                 throw new Error("Không thể xóa bài viết này. Vui lòng kiểm tra lại hệ thống!");
             }
 
-            alert("Xóa bài viết thành công!");
+            toast("Xóa bài viết thành công!", "success");
             fetchNews();
         } catch (err) {
-            alert(err.message);
+            toast(err.message, "error");
         }
     };
 
     return (
-        <div className="flex">
-            <AdminSidebar />
-            <div className="flex-1 min-w-0"> {/* Thêm min-w-0 để tránh flex con bị tràn */}
+        <div className="flex-1 min-w-0"> {/* Thêm min-w-0 để tránh flex con bị tràn */}
                 <div className="p-6">
                     {/* Hero section */}
                     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -88,7 +88,7 @@ export default function NewsAdmin() {
                         <div className="flex flex-wrap gap-2">
                             <button
                                 onClick={() => navigate("/admin/news/add")}
-                                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 whitespace-nowrap"
+                                className="tt-btn-primary text-sm px-4 py-2 whitespace-nowrap"
                             >
                                 Thêm bài viết
                             </button>
@@ -115,7 +115,7 @@ export default function NewsAdmin() {
                                         </tr>
                                     ) : error ? (
                                         <tr>
-                                            <td colSpan={4} className="px-4 py-6 text-center text-red-500 font-medium">{error}</td>
+                                            <td colSpan={4} className="px-4 py-6 text-center text-red-500 dark:text-red-400 font-medium">{error}</td>
                                         </tr>
                                     ) : newsList.length === 0 ? (
                                         <tr>
@@ -175,6 +175,5 @@ export default function NewsAdmin() {
                     </div>
                 </div>
             </div>
-        </div>
     );
 }

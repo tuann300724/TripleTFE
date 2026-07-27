@@ -86,7 +86,7 @@ export default function CourtEdit() {
                                         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900"
                                     />
                                 </div>
-                                <button type="button" className="rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                <button type="button" className="rounded-lg p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
                                     <Trash2 className="h-4 w-4" />
                                 </button>
                             </div>
@@ -135,7 +135,7 @@ export default function CourtEdit() {
                                         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900"
                                     />
                                 </div>
-                                <button type="button" className="rounded-lg p-2 text-red-500 hover:bg-red-50">
+                                <button type="button" className="rounded-lg p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
                                     <Trash2 className="h-4 w-4" />
                                 </button>
                             </div>

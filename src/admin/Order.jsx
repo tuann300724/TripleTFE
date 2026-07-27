@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ClipboardList, Loader2, Eye, Search, X, Calendar, CreditCard, ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
-import AdminSidebar from "./components/AdminSidebar";
+import { API_BASE } from "../config";
+import { useToast } from "../components/Toast";
+
 
 export default function Order() {
     const columns = ["Mã đơn", "Mã KH", "Ngày đặt", "Tổng tiền", "Trạng thái", "Thao tác"];
     const ITEMS_PER_PAGE = 10; // Giới hạn 10 đơn hàng trên mỗi trang
+    const toast = useToast();
 
     // --- STATE QUẢN LÝ DỮ LIỆU ---
     const [orders, setOrders] = useState([]);
@@ -24,7 +27,7 @@ export default function Order() {
 
     // --- FETCH DATA TỪ API ORDERS ---
     useEffect(() => {
-        fetch("https://localhost:7147/api/Orders")
+        fetch(API_BASE + "/Orders")
             .then((res) => {
                 if (!res.ok) throw new Error("Không thể lấy danh sách đơn hàng!");
                 return res.json();
@@ -86,7 +89,7 @@ export default function Order() {
     // --- HÀM XỬ LÝ CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG LÊN BACKEND ---
     const handleStatusChange = async (orderId, newStatus) => {
         try {
-            const response = await fetch(`https://localhost:7147/api/Orders/${orderId}/status`, {
+            const response = await fetch(API_BASE + `/Orders/${orderId}/status`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -104,14 +107,13 @@ export default function Order() {
                 )
             );
 
-            alert(`Đơn hàng #${orderId} đã được chuyển sang trạng thái: ${newStatus}`);
+            toast(`Đơn hàng #${orderId} đã được chuyển sang trạng thái: ${newStatus}`, "success");
         } catch (err) {
-            alert(err.message);
+            toast(err.message, "error");
         }
     };
     return (
-        <div className="flex bg-slate-50 dark:bg-slate-900 min-h-screen">
-            <AdminSidebar />
+        <>
             <div className="flex-1 min-w-0">
                 <div className="p-6 space-y-6 max-w-7xl mx-auto">
 
@@ -198,7 +200,7 @@ export default function Order() {
                                         <tr key={order.orderId} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
                                             <td className="px-4 py-3.5 whitespace-nowrap font-bold text-slate-900 dark:text-white">#{order.orderId}</td>
                                             <td className="px-4 py-3.5 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300">KH - {order.userId}</td>
-                                            <td className="px-4 py-3.5 whitespace-nowrap text-sm text-slate-500">{formatDate(order.orderDate)}</td>
+                                            <td className="px-4 py-3.5 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{formatDate(order.orderDate)}</td>
                                             <td className="px-4 py-3.5 whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-white">{formatCurrency(order.totalAmount)}</td>
                                             <td className="px-4 py-3.5 whitespace-nowrap text-sm">
                                                 <select
@@ -220,7 +222,7 @@ export default function Order() {
                                                 <button
                                                     type="button"
                                                     onClick={() => openDetailModal(order)}
-                                                    className="flex h-8 px-3 items-center gap-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition font-medium text-xs"
+                                                    className="tt-btn-primary h-8 px-3 gap-1.5 text-xs"
                                                 >
                                                     <Eye className="h-3.5 w-3.5" /> Xem chi tiết
                                                 </button>
@@ -281,7 +283,7 @@ export default function Order() {
                         )}
                     </div>
                 </div>
-            </div>
+                </div>
 
             {/* --- MODAL DIALOG CHI TIẾT ĐƠN HÀNG --- */}
             {isModalOpen && selectedOrder && (
@@ -367,6 +369,6 @@ export default function Order() {
                 </div>
             )}
 
-        </div>
+        </>
     );
 }
